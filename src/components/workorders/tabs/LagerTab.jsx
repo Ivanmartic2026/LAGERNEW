@@ -1,14 +1,47 @@
-import React from 'react';
-import { Package, CheckSquare } from 'lucide-react';
+import React, { useState } from 'react';
+import { Package, CheckSquare, ScanBarcode } from 'lucide-react';
 import GateChecklist from '@/components/workorders/GateChecklist';
+import BarcodeScanner from '@/components/workorders/BarcodeScanner';
 import WorkOrderMaterialBoard from '@/components/workorders/WorkOrderMaterialBoard';
 
 export default function LagerTab({ workOrder, workOrderId }) {
+  const [scanning, setScanning] = useState(false);
+  const [lastScan, setLastScan] = useState(null);
+
+  const handleScan = (code) => {
+    setLastScan(code);
+    setScanning(false);
+    // TODO: match against BOM and mark as picked
+  };
   const pickingNotes = workOrder?.picking_notes || '';
 
   return (
     <div className="space-y-5">
       <GateChecklist workOrderId={workOrderId} phase="lager" />
+
+      {/* Streckkodsskanning */}
+      <div className="bg-white/[0.03] rounded-xl border border-white/10 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider">Streckkodsskanning</h3>
+          <button
+            onClick={() => setScanning(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/20 hover:bg-amber-500/25 text-xs font-medium transition-colors"
+          >
+            <ScanBarcode className="w-3.5 h-3.5" />
+            Skanna
+          </button>
+        </div>
+        {lastScan ? (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-white/40">Senast skannad:</span>
+            <span className="text-white font-mono bg-white/5 px-2 py-0.5 rounded">{lastScan}</span>
+          </div>
+        ) : (
+          <p className="text-sm text-white/30">Inget skannat än</p>
+        )}
+      </div>
+
+      {scanning && <BarcodeScanner onScan={handleScan} onClose={() => setScanning(false)} />}
 
       {/* Ansvarig */}
       <div className="bg-white/[0.03] rounded-xl border border-white/10 p-4">

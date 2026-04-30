@@ -1,8 +1,17 @@
-import React from 'react';
-import { MapPin, CheckSquare, Camera } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, CheckSquare, Camera, PenLine } from 'lucide-react';
 import GateChecklist from '@/components/workorders/GateChecklist';
+import CustomerSignature from '@/components/workorders/CustomerSignature';
 
 export default function MonteringTab({ workOrder, workOrderId }) {
+  const [signing, setSigning] = useState(false);
+  const [signatureUrl, setSignatureUrl] = useState(workOrder?.signed_off_by ? 'saved' : null);
+
+  const handleSaveSignature = (url) => {
+    setSignatureUrl(url);
+    setSigning(false);
+    // TODO: save to backend
+  };
   const installationDate = workOrder?.installation_date;
   const technicianName = workOrder?.technician_name;
 
@@ -56,6 +65,31 @@ export default function MonteringTab({ workOrder, workOrderId }) {
           ))}
         </div>
       </div>
+
+      {/* Kundsignering */}
+      <div className="bg-white/[0.03] rounded-xl border border-white/10 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider flex items-center gap-1.5">
+            <PenLine className="w-3.5 h-3.5" /> Kundsignering
+          </h3>
+          <button
+            onClick={() => setSigning(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 text-purple-400 border border-purple-500/20 hover:bg-purple-500/25 text-xs font-medium transition-colors"
+          >
+            <PenLine className="w-3.5 h-3.5" />
+            {signatureUrl ? 'Ändra' : 'Signera'}
+          </button>
+        </div>
+        {signatureUrl && signatureUrl !== 'saved' ? (
+          <img src={signatureUrl} alt="Kundsignatur" className="w-full h-24 object-contain bg-white/5 rounded-lg" />
+        ) : signatureUrl === 'saved' ? (
+          <p className="text-sm text-emerald-400">✓ Signatur inhämtad</p>
+        ) : (
+          <p className="text-sm text-white/30">Ingen signatur inhämtad än</p>
+        )}
+      </div>
+
+      {signing && <CustomerSignature onSave={handleSaveSignature} onClose={() => setSigning(false)} />}
 
       {/* Bilder från installationen */}
       <div className="bg-white/[0.03] rounded-xl border border-white/10 p-4">
