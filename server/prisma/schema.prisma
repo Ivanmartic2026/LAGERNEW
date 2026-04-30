@@ -659,6 +659,20 @@ enum WorkOrderActivityType {
   field_change
 }
 
+enum WorkOrderMaterialStatus {
+  not_checked
+  in_stock
+  partially_picked
+  picked
+  not_ordered
+  purchase_needed
+  ordered
+  partially_received
+  received
+  cancelled
+  not_needed
+}
+
 // ─── Stock Withdrawal ─────────────────────────────────────────────
 
 enum StockWithdrawalType {
@@ -1332,6 +1346,10 @@ model PurchaseOrder {
   sent_for_payment_date     DateTime? // Datum och tid när ordern skickades för betalning till ekonomi
   sent_for_payment_by       String? // Vem som skickade för betalning (email)
   payment_log               Json? // Logg över skickade betalningar till ekonomi
+
+  // NEW: Link back to Work Order and specific material line
+  work_order_id             String?
+  work_order_material_id    String?
 }
 
 model PurchaseOrderItem {
@@ -1712,6 +1730,56 @@ model WorkOrder {
   construction_lead_name        String? // Ansvarig konstruktör (namn)
   project_lead_name             String? // Ansvarig projektledare (namn)
   it_lead_name                  String? // Ansvarig IT (namn)
+
+  // NEW: Structured stage tracking for 7 responsibility areas
+  stage_statuses                Json?    // { konstruktion: {status,started_at,completed_at,assigned_to,checklist}, ... }
+
+  // NEW: Blocker tracking
+  is_blocked                    Boolean  @default(false)
+  blocker_reason                String?
+  blocker_stage                 String?
+  blocker_material_id           String?
+
+  // NEW: Cached current responsible for fast list queries
+  current_responsible_email     String?
+  current_responsible_name      String?
+  current_responsible_stage     String?
+
+  // NEW: Material readiness counters
+  materials_total_count         Int      @default(0)
+  materials_ready_count         Int      @default(0)
+  materials_ordered_count       Int      @default(0)
+  materials_missing_count       Int      @default(0)
+}
+
+model WorkOrderMaterial {
+  id                    String   @id @default(uuid())
+  createdAt             DateTime @default(now()) @map("created_date")
+  updatedAt             DateTime @updatedAt @map("updated_date")
+
+  work_order_id         String
+  article_id            String?
+  article_name          String
+  article_sku           String?
+
+  quantity_needed       Float
+  quantity_picked       Float    @default(0)
+  quantity_ordered      Float    @default(0)
+  quantity_received     Float    @default(0)
+  stock_qty_at_check    Float?
+
+  status                WorkOrderMaterialStatus @default(not_checked)
+
+  purchase_order_id     String?
+  purchase_order_number String?
+  supplier_name         String?
+  expected_delivery     DateTime?
+
+  notes                 String?
+  picked_by             String?
+  picked_at             DateTime?
+
+  stock_withdrawal_id   String?
 }
 
 model WorkOrderActivity {

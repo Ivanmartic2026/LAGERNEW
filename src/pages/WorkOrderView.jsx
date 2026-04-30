@@ -20,6 +20,7 @@ import TechInfoSection from "@/components/workorders/TechInfoSection";
 import DeliverySection from "@/components/workorders/DeliverySection";
 import FilesSection from "@/components/workorders/FilesSection";
 import MaterialsSection from "@/components/workorders/MaterialsSection";
+import WorkOrderMaterialBoard from "@/components/workorders/WorkOrderMaterialBoard";
 import TasksSection from "@/components/workorders/TasksSection";
 import RoleAssignmentSection from "@/components/workorders/RoleAssignmentSection";
 import { resolveStage } from "@/components/workorders/ProcessFlow";
@@ -428,6 +429,15 @@ export default function WorkOrderViewPage() {
 
         {/* SEKTION 6: Material / Artiklar */}
         <MaterialsSection orderItems={orderItems} articles={articles} orderId={workOrder?.order_id} />
+
+        {/* SEKTION 6b: Material & Inköp (Phase 1 — read-only board) */}
+        <div className="bg-black rounded-2xl border border-white/10 p-5">
+          <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <ShoppingCart className="w-4 h-4 text-white/50" />
+            Material & Inköp
+          </h3>
+          <WorkOrderMaterialBoard workOrderId={workOrderId} />
+        </div>
 
         {/* Rollfördelning */}
         <RoleAssignmentSection workOrder={workOrder}

@@ -28,7 +28,7 @@ const VALID_ENTITIES = new Set([
   'ScanMatchAudit', 'ServiceLog', 'SiteReport', 'SiteReportImage',
   'StockAdjustment', 'Supplier', 'SupplierLabelPattern', 'SyncLog',
   'SystemAutomation', 'Task', 'TaskTemplate', 'User', 'Warehouse',
-  'WorkOrder', 'WorkOrderActivity',
+  'WorkOrder', 'WorkOrderActivity', 'WorkOrderMaterial',
 ]);
 
 function validateEntity(req, res, next) {

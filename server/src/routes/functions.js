@@ -18,6 +18,7 @@ import { rejectStockWithdrawal } from '../functions/rejectStockWithdrawal.js';
 import { cancelStockWithdrawal } from '../functions/cancelStockWithdrawal.js';
 import { setupPushNotifications } from '../functions/setupPushNotifications.js';
 import { sendPushNotification } from '../functions/sendPushNotification.js';
+import { getWorkOrderMaterials } from '../functions/getWorkOrderMaterials.js';
 
 const router = Router();
 
@@ -34,6 +35,7 @@ const handlers = {
   cancelStockWithdrawal,
   setupPushNotifications,
   sendPushNotification,
+  getWorkOrderMaterials,
 };
 
 router.post('/:functionName', (req, res, next) => {
