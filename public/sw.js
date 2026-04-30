@@ -1,44 +1,57 @@
 // Service Worker for Lager AI PWA
 // Handles push notifications and offline functionality
 
-const CACHE_NAME = 'lager-ai-v1';
+const CACHE_NAME = 'lager-ai-v2-dev';
 const VAPID_PUBLIC_KEY = 'BKhWuD-M_--GJd3qhKoT1--B51R6WQvdlW_CnjpVrdAt0DddD6Tx5IUKykr5LRH5plX-1_xS718BZKkGlv9L8gw';
 
 // Install event
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker');
+  console.log('[SW] Installing service worker v2');
+  // Clear old caches
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      );
+    })
+  );
   self.skipWaiting();
 });
 
 // Activate event
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker');
+  console.log('[SW] Activating service worker v2');
   event.waitUntil(clients.claim());
 });
 
-// Fetch event — serve from cache, fall back to network
+// Fetch event — NETWORK FIRST for dev, cache as fallback
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request)
-        .then((response) => {
-          if (!response || response.status !== 200) return response;
+    fetch(event.request)
+      .then((response) => {
+        // Cache successful GETs
+        if (response && response.status === 200) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
-          return response;
-        })
-        .catch(() => {
-          // Return a placeholder for offline
+        }
+        return response;
+      })
+      .catch(() => {
+        // Fallback to cache when offline
+        return caches.match(event.request).then((cached) => {
+          if (cached) return cached;
           if (event.request.destination === 'image') {
             return new Response('<svg></svg>', { headers: { 'Content-Type': 'image/svg+xml' } });
           }
           return null;
         });
-    })
+      })
   );
 });
 
