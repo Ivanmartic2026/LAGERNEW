@@ -11,6 +11,7 @@ const DEV_USER = {
   email: 'admin@lagerai.se',
   full_name: 'Admin',
   role: 'admin',
+  systemRoles: ['admin'],
   allowedModules: [],
 };
 

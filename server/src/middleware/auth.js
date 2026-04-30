@@ -1,9 +1,10 @@
 /**
  * Authentication middleware
- * Verifies JWT from HTTP-only cookie
+ * Verifies JWT from HTTP-only cookie and loads user with roles from DB
  */
 
 import { jwtVerify } from 'jose';
+import { prisma } from '../index.js';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'change-me-to-a-256-bit-secret-key'
@@ -23,6 +24,7 @@ export async function requireAuth(req, res, next) {
         id: 'dev-admin-1',
         email: 'admin@lagerai.se',
         role: 'admin',
+        systemRoles: ['admin'],
         full_name: 'Admin',
         allowed_modules: [],
       };
@@ -33,11 +35,22 @@ export async function requireAuth(req, res, next) {
       clockTolerance: 60,
     });
 
+    // Load user from DB to get real roles
+    const dbUser = await prisma.user.findUnique({
+      where: { email: payload.email },
+    });
+
+    const systemRoles = [payload.role];
+    if (dbUser?.secondary_roles && Array.isArray(dbUser.secondary_roles)) {
+      systemRoles.push(...dbUser.secondary_roles);
+    }
+
     req.user = {
       id: payload.sub,
       email: payload.email,
       role: payload.role,
-      full_name: payload.full_name,
+      systemRoles: [...new Set(systemRoles)],
+      full_name: payload.full_name || dbUser?.full_name,
       allowed_modules: payload.allowed_modules || [],
     };
 
@@ -53,7 +66,8 @@ export function requireRole(...roles) {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
-    if (!roles.includes(req.user.role)) {
+    const userRoles = req.user.systemRoles || [req.user.role];
+    if (!userRoles.some((r) => roles.includes(r))) {
       return res.status(403).json({ error: `Required role: ${roles.join(' or ')}` });
     }
     next();

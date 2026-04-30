@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -20,7 +20,7 @@ import LagerTab from "@/components/workorders/tabs/LagerTab";
 import MonteringTab from "@/components/workorders/tabs/MonteringTab";
 import LeveransTab from "@/components/workorders/tabs/LeveransTab";
 
-const TABS = [
+const ALL_TABS = [
   { key: 'overview', label: 'Översikt', phase: null },
   { key: 'konstruktion', label: 'Konstruktion', phase: 'konstruktion' },
   { key: 'produktion', label: 'Produktion', phase: 'produktion' },
@@ -35,12 +35,16 @@ export default function WorkOrderViewPage() {
   const workOrderId = workOrderIdParam || urlSearchParams.get('id');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user: authUser } = useAuth();
   const [currentUser, setCurrentUser] = useState(null);
   const [activityOpen, setActivityOpen] = useState(false);
 
+  const visibleTabs = useMemo(() => filterVisibleTabs(authUser, ALL_TABS), [authUser]);
+
   // Sticky tab per order
   const storageKey = `wo-tab-${workOrderId}`;
-  const defaultTab = tabParam || localStorage.getItem(storageKey) || 'overview';
+  const rawTab = tabParam || localStorage.getItem(storageKey) || 'overview';
+  const defaultTab = visibleTabs.find((t) => t.key === rawTab)?.key || visibleTabs[0]?.key || 'overview';
   const [activeTab, setActiveTab] = useState(defaultTab);
 
   useEffect(() => {
@@ -86,6 +90,7 @@ export default function WorkOrderViewPage() {
   });
 
   const handleTabChange = (newTab) => {
+    if (!visibleTabs.find((t) => t.key === newTab)) return;
     setActiveTab(newTab);
     localStorage.setItem(storageKey, newTab);
     navigate(`/WorkOrders/${workOrderId}/${newTab}`, { replace: true });
@@ -158,7 +163,7 @@ export default function WorkOrderViewPage() {
           <div className="bg-white/[0.03] rounded-xl border border-white/10 overflow-hidden">
             {/* Tab bar */}
             <div className="flex overflow-x-auto border-b border-white/10">
-              {TABS.map((tab) => {
+              {visibleTabs.map((tab) => {
                 const isActive = activeTab === tab.key;
                 return (
                   <button
@@ -170,6 +175,9 @@ export default function WorkOrderViewPage() {
                     `}
                   >
                     {tab.label}
+                    {!canEditTab(authUser, tab.key) && tab.key !== 'overview' && (
+                      <span className="ml-1 text-[9px] text-white/20">(läs)</span>
+                    )}
                     {isActive && (
                       <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-white rounded-full" />
                     )}

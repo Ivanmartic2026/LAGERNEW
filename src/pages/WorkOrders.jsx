@@ -24,6 +24,8 @@ import { RowActionsDropdown, DropdownMenuItem, DropdownMenuSeparator } from "@/c
 import QuickWithdrawalModal from "@/components/inventory/QuickWithdrawalModal";
 import ProcessBoard from "@/components/workorders/ProcessBoard";
 import { useBoard } from "@/hooks/useBoard";
+import { useAuth } from "@/lib/AuthContext";
+import { shouldDefaultToMyOrders } from "@/lib/permissions";
 
 const STAGE_META = {
   konstruktion: { label: 'Konstruktion',   accent: 'sky',     icon: Pencil,     cta: 'Fortsätt',  ctaColor: 'bg-sky-600/20 text-sky-400 hover:bg-sky-600/30 border-sky-500/30' },
@@ -244,7 +246,10 @@ export default function WorkOrdersPage() {
     refetchOnWindowFocus: true
   });
 
-  const { data: boardData, isLoading: isBoardLoading } = useBoard({ assignedTo: 'all' });
+  const { user: authUser } = useAuth();
+  const defaultFilter = shouldDefaultToMyOrders(authUser) ? 'me' : 'all';
+  const [boardFilter, setBoardFilter] = useState(defaultFilter);
+  const { data: boardData, isLoading: isBoardLoading } = useBoard({ assignedTo: boardFilter });
 
   const { data: allMessages = [] } = useQuery({
     queryKey: ['chat_messages_all_wo'],
