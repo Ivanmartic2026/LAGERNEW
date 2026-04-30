@@ -1,4 +1,5 @@
 import { prisma } from '../index.js';
+import { evaluateGates } from '../services/gateService.js';
 
 /**
  * getBoard — Hämta alla arbetsordrar grupperade per fas för ProcessBoard

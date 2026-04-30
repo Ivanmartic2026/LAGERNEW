@@ -12,6 +12,7 @@
 import { Router } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../index.js';
+import { broadcastEvent } from '../services/autoTransitionService.js';
 
 const router = Router();
 
@@ -77,10 +78,15 @@ router.get('/:entityName', validateEntity, async (req, res, next) => {
     orderBy[sortField] = sortDir;
 
     // Build where clause — only known scalar fields (skip unknowns to avoid Prisma crash)
+    const BOOLEAN_FIELDS = ['is_read', 'is_active', 'red_flag_active', 'all_materials_ready', 'needs_procurement', 'requires_approval'];
     const where = {};
     for (const [key, value] of Object.entries(filters)) {
       try {
-        where[key] = value;
+        if (BOOLEAN_FIELDS.includes(key)) {
+          where[key] = value === 'true' || value === true;
+        } else {
+          where[key] = value;
+        }
       } catch {}
     }
 

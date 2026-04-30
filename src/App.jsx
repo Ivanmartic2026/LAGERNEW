@@ -30,6 +30,7 @@ const TidsRapport = lazy(() => import('@/pages/TidsRapport'));
 const KilometerErsattning = lazy(() => import('@/pages/KilometerErsattning'));
 const OrderDashboard = lazy(() => import('@/pages/OrderDashboard'));
 const WorkOrders = lazy(() => import('@/pages/WorkOrders'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const PrintWorkOrder = lazy(() => import('@/pages/PrintWorkOrder'));
 const PrintPickList = lazy(() => import('@/pages/PrintPickList'));
 const PrintDeliveryNote = lazy(() => import('@/pages/PrintDeliveryNote'));
@@ -229,6 +230,12 @@ function App() {
             <Route path="/ProjectResults" element={
               <LayoutWrapper currentPageName="Reports">
                 <ProjectResults />
+              </LayoutWrapper>
+            } />
+            {/* Dashboard */}
+            <Route path="/Dashboard" element={
+              <LayoutWrapper currentPageName="Dashboard">
+                <Dashboard />
               </LayoutWrapper>
             } />
             {/* Work Orders List */}

@@ -25,6 +25,7 @@ import ErrorBoundary from "@/components/utils/ErrorBoundary";
 import IOSInstallPrompt from "@/components/pwa/IOSInstallPrompt";
 import IOSPushPrompt from "@/components/pwa/IOSPushPrompt";
 import SWUpdateForcer from "@/components/pwa/SWUpdateForcer";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // Detect if mobile for performance optimization
 const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
@@ -197,6 +198,7 @@ function LayoutContent({ children, currentPageName }) {
             <PackageSearch className="w-5 h-5" />
           </Button>
           <LanguageToggle />
+          <ThemeToggle />
           <NotificationBell />
         </div>
       </div>
@@ -311,6 +313,7 @@ function LayoutContent({ children, currentPageName }) {
             <PackageSearch className="w-5 h-5" />
           </Button>
           <LanguageToggle />
+          <ThemeToggle />
           <NotificationBell />
           <Button
             variant="ghost"
