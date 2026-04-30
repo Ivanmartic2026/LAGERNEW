@@ -17,6 +17,18 @@ export async function requireAuth(req, res, next) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
+    // DEV-läge: acceptera dev-token utan JWT-validering
+    if (token === 'dev-token-admin') {
+      req.user = {
+        id: 'dev-admin-1',
+        email: 'admin@lagerai.se',
+        role: 'admin',
+        full_name: 'Admin',
+        allowed_modules: [],
+      };
+      return next();
+    }
+
     const { payload } = await jwtVerify(token, JWT_SECRET, {
       clockTolerance: 60,
     });

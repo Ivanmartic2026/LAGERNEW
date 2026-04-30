@@ -659,6 +659,36 @@ enum WorkOrderActivityType {
   field_change
 }
 
+// ─── Stock Withdrawal ─────────────────────────────────────────────
+
+enum StockWithdrawalType {
+  internal_use
+  spare_part
+  adjustment
+  scrap
+  correction
+  production_material
+}
+
+enum StockWithdrawalStatus {
+  draft
+  pending_approval
+  approved
+  rejected
+  completed
+  cancelled
+}
+
+enum StockWithdrawalReason {
+  internal_use
+  spare_part
+  damaged
+  scrap
+  correction
+  inventory_adjustment
+  production
+}
+
 model Article {
   id                         String              @id @default(uuid())
   createdAt                  DateTime            @default(now()) @map("created_date")
@@ -1042,6 +1072,18 @@ model NotificationSettings {
   quiet_hours_enabled    Boolean  @default(true) // Tysta timmar aktiverade
   quiet_hours_start      String   @default("22:00") // Start för tysta timmar (HH:MM)
   quiet_hours_end        String   @default("06:00") // Slut för tysta timmar (HH:MM)
+}
+
+model PushSubscription {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now()) @map("created_date")
+  updatedAt  DateTime @updatedAt @map("updated_date")
+  user_email String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  user_agent String?
+  is_active  Boolean  @default(true)
 }
 
 model Order {
@@ -1560,6 +1602,9 @@ model User {
   id                 String   @id @default(uuid())
   createdAt          DateTime @default(now()) @map("created_date")
   updatedAt          DateTime @updatedAt @map("updated_date")
+  email              String?  @unique // Användarens e-postadress
+  full_name          String?  // Användarens fullständiga namn
+  password_hash      String?  // Bcrypt-hashat lösenord
   allowed_modules    String[] // Moduler användaren har tillgång till
   is_active          Boolean  @default(true) // Om användaren är aktiv eller inaktiverad
   role               UserRole @default(lager) // Primär roll — styr startsida och rättigheter
@@ -1686,4 +1731,58 @@ model WorkOrderActivity {
   file_url        String? // Länk till uppladdad fil
   file_name       String? // Filnamn
   metadata        Json? // Extra data
+}
+
+model StockWithdrawal {
+  id                    String                @id @default(uuid())
+  createdAt             DateTime              @default(now()) @map("created_date")
+  updatedAt             DateTime              @updatedAt @map("updated_date")
+
+  withdrawal_type       StockWithdrawalType   @default(internal_use)
+  status                StockWithdrawalStatus @default(draft)
+
+  linked_order_id       String?               @map("linked_order_id")
+  linked_work_order_id  String?               @map("linked_work_order_id")
+
+  requested_by          String
+  approved_by           String?
+  approved_at           DateTime?
+  completed_by          String?
+  completed_at          DateTime?
+
+  total_value_estimated Float?
+  approval_threshold    Float                 @default(5000)
+  requires_approval     Boolean               @default(false)
+
+  notes                 String?
+  rejection_reason      String?
+
+  items                 StockWithdrawalItem[]
+}
+
+model StockWithdrawalItem {
+  id                    String                @id @default(uuid())
+  createdAt             DateTime              @default(now()) @map("created_date")
+  updatedAt             DateTime              @updatedAt @map("updated_date")
+
+  stock_withdrawal_id   String                @map("stock_withdrawal_id")
+  stockWithdrawal       StockWithdrawal       @relation(fields: [stock_withdrawal_id], references: [id])
+
+  article_id            String                @map("article_id")
+  article_name          String?
+  unit_cost             Float?
+
+  batch_id              String?               @map("batch_id")
+  batch_number          String?
+  shelf_address         String?
+
+  quantity_requested    Float
+  quantity_approved     Float?
+  quantity_withdrawn    Float?
+
+  reason_code           StockWithdrawalReason
+  reason_notes          String?
+
+  stock_before          Float?
+  stock_after           Float?
 }

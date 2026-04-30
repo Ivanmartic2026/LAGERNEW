@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/sonner"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { lazy, Suspense, useEffect } from 'react'
@@ -275,7 +275,19 @@ function App() {
             <Route path="*" element={<AuthenticatedApp />} />
           </Routes>
           </Suspense>
-          <Toaster />
+          <Toaster
+            position="top-right"
+            duration={4000}
+            closeButton
+            toastOptions={{
+              classNames: {
+                error: 'border-red-500/30 bg-red-950/80 text-red-100',
+                success: 'border-emerald-500/30 bg-emerald-950/80 text-emerald-100',
+                warning: 'border-amber-500/30 bg-amber-950/80 text-amber-100',
+                info: 'border-blue-500/30 bg-blue-950/80 text-blue-100',
+              },
+            }}
+          />
           <Suspense fallback={null}><VisualEditAgent /></Suspense>
         </AuthProvider>
       </Router>

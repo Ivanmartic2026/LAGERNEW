@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { X, Plus, Trash2, Package, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { X, Plus, Trash2, Package, ArrowLeft, CheckCircle2, User, Truck, Wrench, Paperclip } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import FortnoxCustomerSelect from "@/components/orders/FortnoxCustomerSelect";
@@ -56,6 +57,7 @@ export default function OrderEdit() {
   const [articleSearch, setArticleSearch] = useState('');
   const [articleDropdownOpen, setArticleDropdownOpen] = useState(false);
   const articleDropdownRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('info');
 
   const queryClient = useQueryClient();
 
@@ -339,17 +341,33 @@ export default function OrderEdit() {
             </div>
 
         {/* Form */}
-         <form onSubmit={handleSubmit} className="space-y-6">
-           <ProjectInfoSection
-             formData={formData}
-             setFormData={setFormData}
-             workOrders={workOrders}
-             onFileUpload={handleFileUpload}
-             isUploadingFile={isUploadingFile}
-           />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="bg-white/5 border border-white/10 p-1 w-full justify-start">
+              <TabsTrigger value="info" className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60 gap-1.5">
+                <User className="w-3.5 h-3.5" /> Orderinfo
+              </TabsTrigger>
+              <TabsTrigger value="material" className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60 gap-1.5">
+                <Package className="w-3.5 h-3.5" /> Material
+              </TabsTrigger>
+              <TabsTrigger value="other" className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60 gap-1.5">
+                <Wrench className="w-3.5 h-3.5" /> Övrigt
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Order Items */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4" id="articles">
+            <TabsContent value="info" className="space-y-6 mt-6">
+              <ProjectInfoSection
+                formData={formData}
+                setFormData={setFormData}
+                workOrders={workOrders}
+                onFileUpload={handleFileUpload}
+                isUploadingFile={isUploadingFile}
+              />
+            </TabsContent>
+
+            <TabsContent value="material" className="space-y-6 mt-6">
+              {/* Order Items */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4" id="articles">
             <h2 className="text-lg font-semibold text-white mb-4">Artiklar</h2>
 
             <div className="flex gap-2">
@@ -469,38 +487,43 @@ export default function OrderEdit() {
             )}
           </div>
 
-          {/* Tasks */}
-          {orderId && (
-            <OrderTasks orderId={orderId} />
-          )}
+            </TabsContent>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-white mb-4">RM System</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-slate-300 mb-2 block">
-                  RM System ID
-                </label>
-                <Input
-                  value={formData.rm_system_id}
-                  onChange={(e) => setFormData({ ...formData, rm_system_id: e.target.value })}
-                  placeholder="T.ex. RM-12345"
-                  className="bg-slate-800 border-slate-700 text-white"
-                />
+            <TabsContent value="other" className="space-y-6 mt-6">
+              {/* Tasks */}
+              {orderId && (
+                <OrderTasks orderId={orderId} />
+              )}
+
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
+                <h2 className="text-lg font-semibold text-white mb-4">RM System</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-slate-300 mb-2 block">
+                      RM System ID
+                    </label>
+                    <Input
+                      value={formData.rm_system_id}
+                      onChange={(e) => setFormData({ ...formData, rm_system_id: e.target.value })}
+                      placeholder="T.ex. RM-12345"
+                      className="bg-slate-800 border-slate-700 text-white"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium text-slate-300 mb-2 block">
+                      RM System URL
+                    </label>
+                    <Input
+                      value={formData.rm_system_url}
+                      onChange={(e) => setFormData({ ...formData, rm_system_url: e.target.value })}
+                      placeholder="https://rm-system.example.com/order/12345"
+                      className="bg-slate-800 border-slate-700 text-white"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="md:col-span-2">
-                <label className="text-sm font-medium text-slate-300 mb-2 block">
-                  RM System URL
-                </label>
-                <Input
-                  value={formData.rm_system_url}
-                  onChange={(e) => setFormData({ ...formData, rm_system_url: e.target.value })}
-                  placeholder="https://rm-system.example.com/order/12345"
-                  className="bg-slate-800 border-slate-700 text-white"
-                />
-              </div>
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pb-6">

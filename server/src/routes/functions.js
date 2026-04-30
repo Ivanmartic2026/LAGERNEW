@@ -3,26 +3,51 @@
  * Pattern: /api/v1/functions/:functionName
  *
  * Each Base44 function becomes an Express POST handler.
- * This file is a registry; individual functions are imported from src/functions/.
  */
 
 import { Router } from 'express';
 
+import { updateWorkOrderStage } from '../functions/updateWorkOrderStage.js';
+import { logWorkOrderActivity } from '../functions/logWorkOrderActivity.js';
+import { createWorkOrder } from '../functions/createWorkOrder.js';
+import { quickStockWithdrawal } from '../functions/quickStockWithdrawal.js';
+import { createStockWithdrawal } from '../functions/createStockWithdrawal.js';
+import { submitStockWithdrawal } from '../functions/submitStockWithdrawal.js';
+import { approveStockWithdrawal } from '../functions/approveStockWithdrawal.js';
+import { rejectStockWithdrawal } from '../functions/rejectStockWithdrawal.js';
+import { cancelStockWithdrawal } from '../functions/cancelStockWithdrawal.js';
+import { setupPushNotifications } from '../functions/setupPushNotifications.js';
+import { sendPushNotification } from '../functions/sendPushNotification.js';
+
 const router = Router();
 
 // ── Function registry ──
-// TODO: Import and register all 173 migrated functions here
-// Example:
-// import { createWorkOrder } from '../functions/createWorkOrder.js';
-// router.post('/createWorkOrder', createWorkOrder);
+const handlers = {
+  updateWorkOrderStage,
+  logWorkOrderActivity,
+  createWorkOrder,
+  quickStockWithdrawal,
+  createStockWithdrawal,
+  submitStockWithdrawal,
+  approveStockWithdrawal,
+  rejectStockWithdrawal,
+  cancelStockWithdrawal,
+  setupPushNotifications,
+  sendPushNotification,
+};
 
-// Placeholder: return 501 Not Implemented for unregistered functions
-router.post('/:functionName', (req, res) => {
+router.post('/:functionName', (req, res, next) => {
   const { functionName } = req.params;
-  res.status(501).json({
-    error: `Function "${functionName}" not yet migrated`,
-    note: 'Functions are being migrated from base44/functions/ to server/src/functions/',
-  });
+  const handler = handlers[functionName];
+
+  if (!handler) {
+    return res.status(501).json({
+      error: `Function "${functionName}" not yet migrated`,
+      note: 'Functions are being migrated from base44/functions/ to server/src/functions/',
+    });
+  }
+
+  return handler(req, res, next);
 });
 
 export { router as functionsRouter };

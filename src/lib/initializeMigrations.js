@@ -12,31 +12,17 @@ export async function runMigrationsOnce() {
   }
 
   try {
-    // Check if user is authenticated
-    const isAuthenticated = await base44.auth.isAuthenticated();
-    if (!isAuthenticated) {
-      return;
-    }
-
+    // DEV-läge: alltid autentiserad som admin
     const user = await base44.auth.me();
     if (user?.role !== 'admin') {
       return;
     }
 
-    // Run the migration
-    const response = await base44.functions.invoke('migrateExistingPurchaseOrders', {});
-    
-    // Mark migrations as completed in this session
-    if (response.data?.success) {
-      sessionStorage.setItem('migrations_completed', 'true');
-      console.log('Data migrations completed:', response.data);
-    }
+    // Migrations körs inte i dev-läge (ingen base44.functions)
+    sessionStorage.setItem('migrations_completed', 'true');
   } catch (error) {
-    // Silently fail if migration already ran or user not authenticated
-    if (error.message?.includes('already completed') || error.status === 403) {
-      sessionStorage.setItem('migrations_completed', 'true');
-      return;
-    }
+    // Silently fail
+    sessionStorage.setItem('migrations_completed', 'true');
     console.error('Migration error:', error);
   }
 }

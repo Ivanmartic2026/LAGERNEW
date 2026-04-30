@@ -42,7 +42,7 @@ export default function NotificationBell() {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const unread = notifications.filter(n => !n.is_read);
+      const unread = (Array.isArray(notifications) ? notifications : []).filter(n => !n.is_read);
       await Promise.all(unread.map(n => base44.entities.Notification.update(n.id, { is_read: true })));
     },
     onSuccess: () => {
@@ -57,7 +57,8 @@ export default function NotificationBell() {
     }
   });
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+  const unreadCount = safeNotifications.filter(n => !n.is_read).length;
 
   const getIcon = (type) => {
     switch (type) {
@@ -130,14 +131,14 @@ export default function NotificationBell() {
               </div>
 
               <div className="overflow-y-auto max-h-[500px]">
-                {notifications.length === 0 ? (
+                {safeNotifications.length === 0 ? (
                   <div className="text-center py-12">
                     <Bell className="w-12 h-12 text-slate-600 mx-auto mb-3" />
                     <p className="text-slate-400">Inga notifieringar</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-700">
-                    {notifications.map((notification) => {
+                    {safeNotifications.map((notification) => {
                       const Icon = getIcon(notification.type);
                       return (
                         <div

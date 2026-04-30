@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import QuickWithdrawalModal from "@/components/inventory/QuickWithdrawalModal";
+import CommandMenu from "@/components/search/CommandMenu";
 import RecentActivityWidget from "@/components/activity/RecentActivityWidget";
 import OfflineIndicator from "@/components/pwa/OfflineIndicator";
 import PWAOptimizer from "@/components/pwa/PWAOptimizer";
@@ -18,6 +20,7 @@ import { useLanguage } from "@/components/language/LanguageProvider";
 import { t, tOrderStatus, tStage, tWorkOrderStatus, tPriority } from "@/components/language/translations";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { queryClientInstance } from '@/lib/query-client';
 import ErrorBoundary from "@/components/utils/ErrorBoundary";
 import IOSInstallPrompt from "@/components/pwa/IOSInstallPrompt";
 import IOSPushPrompt from "@/components/pwa/IOSPushPrompt";
@@ -88,6 +91,7 @@ function LayoutContent({ children, currentPageName }) {
   const visibleNavItems = NAV_ITEMS.filter(item => !item.module || userModules.includes(item.module));
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
   const mobile = isMobile();
   
   // Save navigation stacks when location changes
@@ -183,6 +187,15 @@ function LayoutContent({ children, currentPageName }) {
           />
         </button>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setWithdrawalModalOpen(true)}
+            className="text-white/70 hover:text-white hover:bg-white/10"
+            title="Uttag från lager"
+          >
+            <PackageSearch className="w-5 h-5" />
+          </Button>
           <LanguageToggle />
           <NotificationBell />
         </div>
@@ -288,6 +301,15 @@ function LayoutContent({ children, currentPageName }) {
        </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setWithdrawalModalOpen(true)}
+            className="text-white/70 hover:text-white"
+            title="Uttag från lager"
+          >
+            <PackageSearch className="w-5 h-5" />
+          </Button>
           <LanguageToggle />
           <NotificationBell />
           <Button
@@ -390,6 +412,17 @@ function LayoutContent({ children, currentPageName }) {
           </AnimatePresence>
         </ErrorBoundary>
       </main>
+
+      <CommandMenu />
+
+      <QuickWithdrawalModal
+        open={withdrawalModalOpen}
+        onOpenChange={setWithdrawalModalOpen}
+        onSuccess={() => {
+          // Optionally invalidate article queries so lists refresh
+          queryClientInstance.invalidateQueries({ queryKey: ['articles'] });
+        }}
+      />
 
       <IOSInstallPrompt />
       <IOSPushPrompt />

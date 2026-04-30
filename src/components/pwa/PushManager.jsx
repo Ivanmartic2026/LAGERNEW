@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 // The VAPID public key — must match what's configured in VAPID_PUBLIC_KEY secret
 // This is the public key (safe to be in frontend code)
-const VAPID_PUBLIC_KEY = 'BHzJy9-MhN0-6L-VJVnZkWQhLMv5zpLBRwCMN7eYhEWk3hD5T8lBLBnPzYHvKxVLesFfJ3_dLu-bX6CHqxHVvEo';
+const VAPID_PUBLIC_KEY = 'BKhWuD-M_--GJd3qhKoT1--B51R6WQvdlW_CnjpVrdAt0DddD6Tx5IUKykr5LRH5plX-1_xS718BZKkGlv9L8gw';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -58,7 +58,10 @@ export default function PushManager() {
       registration.update().catch(err => console.warn('[PushManager] SW update check failed:', err.message));
 
       // Auto-setup push after SW is ready
-      const isAuthenticated = await base44.auth.isAuthenticated().catch(() => false);
+      // DEV-läge: base44.auth.isAuthenticated ej tillgängligt, alltid autentiserad
+      const isAuthenticated = base44.auth.isAuthenticated
+        ? await base44.auth.isAuthenticated().catch(() => false)
+        : true;
       if (!isAuthenticated) {
         console.log('[PushManager] User not authenticated, skipping push setup');
         return;
@@ -139,12 +142,17 @@ export default function PushManager() {
       }
 
       // Save to backend
-      console.log('[PushManager] Saving subscription to backend...');
-      const result = await base44.functions.invoke('setupPushNotifications', {
-        subscription: subscription.toJSON(),
-        action: 'subscribe'
-      });
-      console.log('[PushManager] Subscription saved:', result?.data);
+      // DEV-läge: base44.functions ej tillgängligt, skip silently
+      if (base44.functions?.invoke) {
+        console.log('[PushManager] Saving subscription to backend...');
+        const result = await base44.functions.invoke('setupPushNotifications', {
+          subscription: subscription.toJSON(),
+          action: 'subscribe'
+        });
+        console.log('[PushManager] Subscription saved:', result?.data);
+      } else {
+        console.log('[PushManager] DEV-läge — push subscription sparas ej');
+      }
     } catch (err) {
       console.error('[PushManager] Push setup error:', err.message, err.stack);
     }

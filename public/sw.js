@@ -2,7 +2,7 @@
 // Handles push notifications and offline functionality
 
 const CACHE_NAME = 'lager-ai-v1';
-const VAPID_PUBLIC_KEY = 'BHzJy9-MhN0-6L-VJVnZkWQhLMv5zpLBRwCMN7eYhEWk3hD5T8lBLBnPzYHvKxVLesFfJ3_dLu-bX6CHqxHVvEo';
+const VAPID_PUBLIC_KEY = 'BKhWuD-M_--GJd3qhKoT1--B51R6WQvdlW_CnjpVrdAt0DddD6Tx5IUKykr5LRH5plX-1_xS718BZKkGlv9L8gw';
 
 // Install event
 self.addEventListener('install', (event) => {

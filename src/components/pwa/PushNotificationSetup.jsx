@@ -73,7 +73,7 @@ export default function PushNotificationSetup() {
 
       if (!subscription) {
         // Create new subscription with VAPID public key
-        const VAPID_PUBLIC_KEY = 'BHzJy9-MhN0-6L-VJVnZkWQhLMv5zpLBRwCMN7eYhEWk3hD5T8lBLBnPzYHvKxVLesFfJ3_dLu-bX6CHqxHVvEo';
+        const VAPID_PUBLIC_KEY = 'BKhWuD-M_--GJd3qhKoT1--B51R6WQvdlW_CnjpVrdAt0DddD6Tx5IUKykr5LRH5plX-1_xS718BZKkGlv9L8gw';
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
@@ -106,6 +106,11 @@ export default function PushNotificationSetup() {
 
       if (subscription) {
         await subscription.unsubscribe();
+        // Also remove from backend
+        await base44.functions.invoke('setupPushNotifications', {
+          subscription: subscription.toJSON(),
+          action: 'unsubscribe'
+        });
         setIsSubscribed(false);
         toast.success('Push-notiser avaktiverade');
       }

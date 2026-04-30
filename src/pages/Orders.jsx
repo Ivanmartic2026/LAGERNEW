@@ -8,11 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/ui/empty-state";
+import { RowActionsDropdown, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/row-actions";
 import { 
   Search, Plus, Package, ClipboardList, Download, Upload,
   Calendar, User, MapPin, FileText, Truck, Eye, ArrowUpDown, Printer,
   CheckSquare, X, CheckCircle2, AlertCircle, Mail, ChevronDown,
-  TrendingUp, Clock, AlertTriangle, Factory
+  TrendingUp, Clock, AlertTriangle, Factory, MoreHorizontal, Edit, Trash2, Send, ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
@@ -724,24 +726,12 @@ export default function OrdersPage() {
             ))}
           </div>
         ) : filteredAndSortedOrders.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
-              <ClipboardList className="w-8 h-8 text-white/30" />
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-2 tracking-tight">
-              Inga ordrar ännu
-            </h3>
-            <p className="text-white/50 mb-6">
-              Skapa din första order för att komma igång
-            </p>
-            <Button
-              onClick={() => navigate('/OrderEdit')}
-              className="bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/70 transition-all duration-300"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Skapa order
-            </Button>
-          </div>
+          <EmptyState
+            icon={ClipboardList}
+            title={searchQuery ? "Inga ordrar hittades" : "Inga ordrar ännu"}
+            description={searchQuery ? "Prova ett annat sökord" : "Skapa din första order för att komma igång"}
+            action={!searchQuery ? { label: 'Skapa order', onClick: () => navigate('/OrderEdit') } : undefined}
+          />
         ) : (
           <div className="space-y-3">
             <AnimatePresence>
@@ -921,17 +911,16 @@ export default function OrdersPage() {
                       })}
                     </div>
 
-                    <div className="flex items-start justify-between">
-                      <div></div>
-
-                      <div className="flex gap-2 ml-4 flex-wrap justify-end">
+                    {/* Actions */}
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="bg-slate-700 border-slate-600 hover:bg-slate-600"
-                          onClick={() => navigate(`/OrderDetail?id=${order.id}`)}
+                          className="h-7 bg-white/5 border-white/10 hover:bg-white/10 text-white/80 text-xs px-2.5"
+                          onClick={(e) => { e.stopPropagation(); navigate(`/OrderDetail?id=${order.id}`); }}
                         >
-                          <Eye className="w-4 h-4 mr-2" />
+                          <Eye className="w-3.5 h-3.5 mr-1" />
                           Detaljer
                         </Button>
 
@@ -939,181 +928,168 @@ export default function OrdersPage() {
                           const wo = workOrders.find(w => w.order_id === order.id);
                           if (!wo) return null;
                           return (
-                            <Link to={createPageUrl(`WorkOrderView?id=${wo.id}`)}>
-                              <Button size="sm" className="bg-blue-700 hover:bg-blue-600">
-                                <ClipboardList className="w-4 h-4 mr-2" />
-                                Arbetsorder
+                            <Link to={createPageUrl(`WorkOrderView?id=${wo.id}`)} onClick={(e) => e.stopPropagation()}>
+                              <Button size="sm" className="h-7 bg-blue-700 hover:bg-blue-600 text-xs px-2.5">
+                                <ClipboardList className="w-3.5 h-3.5 mr-1" />
+                                AO
                               </Button>
                             </Link>
                           );
                         })()}
 
                         {(order.status === 'picking') && (
-                          <Link to={`${createPageUrl("PickOrder")}?orderId=${order.id}`}>
-                            <Button
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-500"
-                            >
-                              <ClipboardList className="w-4 h-4 mr-2" />
+                          <Link to={`${createPageUrl("PickOrder")}?orderId=${order.id}`} onClick={(e) => e.stopPropagation()}>
+                            <Button size="sm" className="h-7 bg-blue-600 hover:bg-blue-500 text-xs px-2.5">
+                              <ClipboardList className="w-3.5 h-3.5 mr-1" />
                               Plocka
                             </Button>
                           </Link>
                         )}
 
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-slate-700 border-slate-600 hover:bg-slate-600"
-                          onClick={() => printOrderMutation.mutate(order.id)}
+                        {order.status === 'picked' && (
+                          <Button
+                            size="sm"
+                            className="h-7 bg-blue-600/20 border-blue-500/30 text-blue-400 hover:bg-blue-600/30 text-xs px-2.5"
+                            onClick={(e) => { e.stopPropagation(); sendToProductionMutation.mutate(order); }}
+                            disabled={sendToProductionMutation.isPending}
+                          >
+                            <Factory className="w-3.5 h-3.5 mr-1" />
+                            Till produktion
+                          </Button>
+                        )}
+
+                        {order.status === 'picked' && !order.fortnox_invoiced && (
+                          <Button
+                            size="sm"
+                            className="h-7 bg-green-600/20 border-green-500/30 text-green-400 hover:bg-green-600/30 text-xs px-2.5"
+                            onClick={(e) => { e.stopPropagation(); setInvoiceModalOrder(order); }}
+                          >
+                            <FileText className="w-3.5 h-3.5 mr-1" />
+                            Fakturera
+                          </Button>
+                        )}
+                      </div>
+
+                      <RowActionsDropdown>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            printOrderMutation.mutate(order.id);
+                          }}
                           disabled={printOrderMutation.isPending}
                         >
-                          <Printer className="w-4 h-4 md:mr-2" />
-                          <span className="hidden md:inline">Skriv ut</span>
-                        </Button>
+                          <Printer className="mr-2 h-4 w-4" />
+                          Skriv ut
+                        </DropdownMenuItem>
 
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-blue-600 border-blue-500 hover:bg-blue-500 text-white"
-                          onClick={async () => {
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
                             const email = prompt("Ange mottagarens e-postadress:");
                             if (!email) return;
                             const loadingToast = toast.loading('Skickar email...');
-                            try {
-                              await base44.functions.invoke('exportOrder', { orderId: order.id, email });
-                              toast.success('Email skickad!', { id: loadingToast });
-                            } catch (error) {
-                              toast.error('Kunde inte skicka email', { id: loadingToast });
-                            }
+                            base44.functions.invoke('exportOrder', { orderId: order.id, email })
+                              .then(() => toast.success('Email skickad!', { id: loadingToast }))
+                              .catch(() => toast.error('Kunde inte skicka email', { id: loadingToast }));
                           }}
                         >
-                          <Mail className="w-4 h-4 md:mr-2" />
-                          <span className="hidden md:inline">Skicka</span>
-                        </Button>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Skicka email
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`/PrintDeliveryNote?id=${order.id}`, '_blank');
+                          }}
+                        >
+                          <Printer className="mr-2 h-4 w-4" />
+                          Leveranssedel
+                        </DropdownMenuItem>
+
+                        {order.status === 'picked' && (
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              exportOrderMutation.mutate(order.id);
+                            }}
+                            disabled={exportOrderMutation.isPending}
+                          >
+                            <Download className="mr-2 h-4 w-4" />
+                            Exportera PDF
+                          </DropdownMenuItem>
+                        )}
+
+                        <DropdownMenuSeparator />
 
                         {!order.fortnox_project_number && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-purple-600/20 border-purple-500/30 text-purple-400 hover:bg-purple-600/30"
-                            onClick={() => {
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
                               if (window.confirm(`Vill du skapa ett Fortnox-projekt för order ${order.order_number}?`)) {
                                 createFortnoxProjectMutation.mutate(order.id);
                               }
                             }}
                             disabled={createFortnoxProjectMutation.isPending}
                           >
+                            <ExternalLink className="mr-2 h-4 w-4" />
                             Skapa Fortnox Projekt
-                          </Button>
+                          </DropdownMenuItem>
                         )}
 
                         {!order.fortnox_order_id && (
-                          <FortnoxSyncButton 
-                            order={order} 
-                            orderItems={orderItems.filter(item => item.order_id === order.id)}
-                            onSyncSuccess={() => refetch()}
-                          />
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // FortnoxSyncButton is a component, not a function — open edit for sync
+                              navigate(`/OrderEdit?id=${order.id}`);
+                            }}
+                          >
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            Synka till Fortnox
+                          </DropdownMenuItem>
                         )}
 
                         {order.status !== 'in_production' && !workOrders.find(w => w.order_id === order.id) && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-green-600/20 border-green-500/30 text-green-400 hover:bg-green-600/30"
-                            onClick={() => createWorkOrderMutation.mutate(order)}
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              createWorkOrderMutation.mutate(order);
+                            }}
                             disabled={createWorkOrderMutation.isPending}
                           >
-                            {createWorkOrderMutation.isPending ? (
-                              <>
-                                <div className="w-3 h-3 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin mr-2" />
-                                Skapar...
-                              </>
-                            ) : (
-                              <>
-                                <Factory className="w-4 h-4 mr-2" />
-                                Skapa arbetsorder
-                              </>
-                            )}
-                          </Button>
+                            <Factory className="mr-2 h-4 w-4" />
+                            Skapa arbetsorder
+                          </DropdownMenuItem>
                         )}
 
-                        {order.status === 'picked' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-blue-600/20 border-blue-500/30 text-blue-400 hover:bg-blue-600/30"
-                            onClick={() => sendToProductionMutation.mutate(order)}
-                            disabled={sendToProductionMutation.isPending}
-                          >
-                            <Factory className="w-4 h-4 mr-2" />
-                            Till produktion
-                          </Button>
-                        )}
+                        <DropdownMenuSeparator />
 
-                        {order.status === 'picked' && !order.fortnox_invoiced && (
-                           <Button
-                             size="sm"
-                             variant="outline"
-                             className="bg-green-600/20 border-green-500/30 text-green-400 hover:bg-green-600/30"
-                             onClick={() => setInvoiceModalOrder(order)}
-                           >
-                             <FileText className="w-4 h-4 mr-2" />
-                             Fakturera
-                           </Button>
-                         )}
-
-                        <Button
-                           size="sm"
-                           variant="outline"
-                           className="bg-slate-700 border-slate-600 hover:bg-slate-600 text-white"
-                           onClick={() => window.open(`/PrintDeliveryNote?id=${order.id}`, '_blank')}
-                         >
-                           <Printer className="w-4 h-4 md:mr-2" />
-                           <span className="hidden md:inline">Leveranssedel</span>
-                         </Button>
-
-                        {order.status === 'picked' && (
-                           <Button
-                             size="sm"
-                             variant="outline"
-                             className="bg-green-600/20 border-green-500/30 text-green-400 hover:bg-green-600/30"
-                             onClick={() => exportOrderMutation.mutate(order.id)}
-                             disabled={exportOrderMutation.isPending}
-                           >
-                             <Download className="w-4 h-4 mr-2" />
-                             PDF
-                           </Button>
-                         )}
-
-                         <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-slate-700 border-slate-600 hover:bg-slate-600"
-                           onClick={() => navigate(`/OrderEdit?id=${order.id}`)}
-                         >
-                           Redigera
-                         </Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
+                        <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log('Ta bort clicked for order:', order.id);
+                            navigate(`/OrderEdit?id=${order.id}`);
+                          }}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Redigera
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
                             if (window.confirm('Är du säker på att du vill ta bort denna order?')) {
-                              console.log('User confirmed deletion');
                               deleteOrderMutation.mutate(order.id);
-                            } else {
-                              console.log('User cancelled deletion');
                             }
                           }}
                           disabled={deleteOrderMutation.isPending}
+                          className="text-red-400 focus:text-red-400 focus:bg-red-950"
                         >
+                          <Trash2 className="mr-2 h-4 w-4" />
                           {deleteOrderMutation.isPending ? 'Tar bort...' : 'Ta bort'}
-                        </Button>
-                        </div>
-                        </div>
+                        </DropdownMenuItem>
+                      </RowActionsDropdown>
+                    </div>
                         </motion.div>
                         );
                         })}
@@ -1125,17 +1101,11 @@ export default function OrdersPage() {
           /* Plockningslista */
           <div className="space-y-3">
             {filteredPickingTasks.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="w-8 h-8 text-green-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  Inga plockningsuppgifter
-                </h3>
-                <p className="text-white/50">
-                  Allt är plockat eller så finns inga aktiva ordrar
-                </p>
-              </div>
+              <EmptyState
+                icon={CheckCircle2}
+                title="Inga plockningsuppgifter"
+                description="Allt är plockat eller så finns inga aktiva ordrar"
+              />
             ) : (
               <AnimatePresence>
                 {filteredPickingTasks.map((task) => {

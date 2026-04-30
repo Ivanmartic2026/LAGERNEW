@@ -24,6 +24,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ArticleDetail from "@/components/articles/ArticleDetail";
@@ -436,7 +437,7 @@ export default function InventoryPage() {
   };
 
   const supplierMap = {};
-  suppliers.forEach(s => supplierMap[s.id] = s.name);
+  (Array.isArray(suppliers) ? suppliers : []).forEach(s => supplierMap[s.id] = s.name);
 
   // Calculate incoming quantities for each article
   const incomingQuantities = {};
@@ -1051,27 +1052,12 @@ export default function InventoryPage() {
             ))}
           </div>
         ) : filteredArticles.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
-              <Package className="w-8 h-8 text-white/30" />
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-2">
-              {searchQuery ? "Inga artiklar hittades" : "Inga artiklar ännu"}
-            </h3>
-            <p className="text-white/50 mb-6">
-              {searchQuery 
-                ? "Prova ett annat sökord" 
-                : "Börja med att skanna din första artikel"}
-            </p>
-            {!searchQuery && (
-              <Link to={createPageUrl("Scan")}>
-                <Button className="bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/70 transition-all duration-300">
-                  <Camera className="w-4 h-4 mr-2" />
-                  Skanna artikel
-                </Button>
-              </Link>
-            )}
-          </div>
+          <EmptyState
+            icon={Package}
+            title={searchQuery ? "Inga artiklar hittades" : "Inga artiklar ännu"}
+            description={searchQuery ? "Prova ett annat sökord" : "Börja med att skanna din första artikel"}
+            action={!searchQuery ? { label: 'Skanna artikel', onClick: () => navigate('/Scan') } : undefined}
+          />
         ) : (
           <div className="space-y-2">
             {/* Desktop Table - scrollable */}

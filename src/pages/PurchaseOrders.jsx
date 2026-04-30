@@ -5,11 +5,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { 
 Search, Plus, ShoppingCart, Download, Calendar,
 Truck, Package, User, Printer, Mail, Eye, X, CheckCircle2, AlertCircle, Link2, Copy, FileText,
-TrendingUp, Clock, PackageCheck, Send, ChevronDown, ChevronRight, ArrowRight
+TrendingUp, Clock, PackageCheck, Send, ChevronDown, ChevronRight, ArrowRight, MoreHorizontal
 } from "lucide-react";
 // CheckCircle2 already imported above
 import { cn } from "@/lib/utils";
@@ -485,123 +492,141 @@ export default function PurchaseOrdersPage() {
 
                       {/* Actions */}
                       <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/6 bg-white/[0.02]">
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <FortnoxPOSyncButton po={po} />
                           <POStatusFlow po={po} />
+
+                          {/* Primary workflow action */}
                           {(po.status === 'ordered' || po.status === 'partially_received') && (
-                            <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors" onClick={() => setReceivingPO(po)}>
-                              <Package className="w-3 h-3" />Ta emot
-                            </button>
+                            <Button
+                              size="sm"
+                              className="h-7 bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5"
+                              onClick={() => setReceivingPO(po)}
+                            >
+                              <Package className="w-3 h-3 mr-1" />Ta emot
+                            </Button>
                           )}
-                          {(po.status === 'received' || po.status === 'partially_received') && (
-                            <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs text-white/50 hover:text-white hover:bg-white/8 transition-colors" onClick={() => setViewingPO(po)}>
-                              <Eye className="w-3 h-3" />Följesedel
-                            </button>
-                          )}
-                          <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs text-white/50 hover:text-white hover:bg-white/8 transition-colors" onClick={() => setDocumentsPO(po)}>
-                            <FileText className="w-3 h-3" />Dokument
-                          </button>
-                          <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs text-white/50 hover:text-white hover:bg-white/8 transition-colors" onClick={async () => {
-                            let token = po.supplier_portal_token;
-                            if (!token) {
-                              token = crypto.randomUUID().replace(/-/g, '');
-                              await base44.entities.PurchaseOrder.update(po.id, { supplier_portal_token: token });
-                              queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-                            }
-                            const portalUrl = `${window.location.origin}${createPageUrl('SupplierPOView')}?po=${po.id}&token=${token}`;
-                            navigator.clipboard.writeText(portalUrl);
-                            toast.success('Leverantörslänk kopierad!');
-                          }}>
-                            <Link2 className="w-3 h-3" />Lev.länk
-                          </button>
-                          <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs text-white/50 hover:text-white hover:bg-white/8 transition-colors" onClick={async () => { 
-                            let token = po.supplier_portal_token;
-                            if (!token) {
-                              token = crypto.randomUUID().replace(/-/g, '');
-                              await base44.entities.PurchaseOrder.update(po.id, { supplier_portal_token: token });
-                              queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-                            }
-                            setSelectedPOForEmail(po);
-                            setSupplierPortalUrl(`${window.location.origin}${createPageUrl('SupplierPOView')}?po=${po.id}&token=${token}`);
-                            setEmailModalOpen(true);
-                          }}>
-                            <Mail className="w-3 h-3" />Email
-                          </button>
-                          <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs text-white/50 hover:text-white hover:bg-white/8 transition-colors" onClick={() => printPOMutation.mutate(po)} disabled={printPOMutation.isPending}>
-                            <Printer className="w-3 h-3" />Skriv ut
-                          </button>
                           {po.status === 'received' && (
-                            <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs text-white/50 hover:text-white hover:bg-white/8 transition-colors" onClick={() => exportPOMutation.mutate(po.id)} disabled={exportPOMutation.isPending}>
-                              <Download className="w-3 h-3" />Kvitto
-                            </button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-xs px-2.5"
+                              onClick={() => setAccountingModalPO(po)}
+                            >
+                              <Send className="w-3 h-3 mr-1" />Till ekonomi
+                            </Button>
                           )}
-                          {po.status === 'received' && !po.fortnox_incoming_goods_id && (
-                            <button
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/40 shadow-lg shadow-emerald-500/20 transition-all"
-                              onClick={async () => {
-                                if (!confirm(`Synca inleverans till Fortnox för ${po.po_number || po.id.slice(0,8)}?`)) return;
-                                const t = toast.loading("Syncar till Fortnox...");
-                                try {
-                                  const res = await base44.functions.invoke('fortnoxSyncV2', {
-                                    purchaseOrderId: po.id,
-                                    createInboundDelivery: true
-                                  });
-                                  toast.dismiss(t);
-                                  const data = res.data;
-                                  if (data?.success) {
-                                    const skipped = data?.diagnostics?.skippedItems?.length || 0;
-                                    const gnr = data?.goodsReceiptNumber;
-                                    toast.success(
-                                      `✅ Inleverans skapad i Fortnox!${gnr ? ` (GR#${gnr})` : ''}${skipped > 0 ? ` · ${skipped} rad(er) hoppades över` : ''}`,
-                                      { duration: 6000 }
-                                    );
-                                  } else {
-                                    const errMsg = data?.errors?.[0] || data?.error || 'Okänt fel';
-                                    toast.error(`❌ Misslyckades: ${errMsg}`, { duration: 8000 });
+
+                          {/* More actions dropdown */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 w-7 p-0 border-white/20 bg-white/5 hover:bg-white/10 text-white"
+                              >
+                                <MoreHorizontal className="w-3.5 h-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-52 bg-slate-800 border-white/10 text-white">
+                              {(po.status === 'received' || po.status === 'partially_received') && (
+                                <DropdownMenuItem onClick={() => setViewingPO(po)} className="text-white focus:bg-white/10 focus:text-white cursor-pointer">
+                                  <Eye className="w-4 h-4 mr-2 text-white/50" />Följesedel
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => setDocumentsPO(po)} className="text-white focus:bg-white/10 focus:text-white cursor-pointer">
+                                <FileText className="w-4 h-4 mr-2 text-white/50" />Dokument
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={async () => {
+                                let token = po.supplier_portal_token;
+                                if (!token) {
+                                  token = crypto.randomUUID().replace(/-/g, '');
+                                  await base44.entities.PurchaseOrder.update(po.id, { supplier_portal_token: token });
+                                  queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+                                }
+                                const portalUrl = `${window.location.origin}${createPageUrl('SupplierPOView')}?po=${po.id}&token=${token}`;
+                                navigator.clipboard.writeText(portalUrl);
+                                toast.success('Leverantörslänk kopierad!');
+                              }} className="text-white focus:bg-white/10 focus:text-white cursor-pointer">
+                                <Link2 className="w-4 h-4 mr-2 text-white/50" />Kopiera lev.länk
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={async () => {
+                                let token = po.supplier_portal_token;
+                                if (!token) {
+                                  token = crypto.randomUUID().replace(/-/g, '');
+                                  await base44.entities.PurchaseOrder.update(po.id, { supplier_portal_token: token });
+                                  queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+                                }
+                                setSelectedPOForEmail(po);
+                                setSupplierPortalUrl(`${window.location.origin}${createPageUrl('SupplierPOView')}?po=${po.id}&token=${token}`);
+                                setEmailModalOpen(true);
+                              }} className="text-white focus:bg-white/10 focus:text-white cursor-pointer">
+                                <Mail className="w-4 h-4 mr-2 text-white/50" />Skicka email
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => printPOMutation.mutate(po)} disabled={printPOMutation.isPending} className="text-white focus:bg-white/10 focus:text-white cursor-pointer">
+                                <Printer className="w-4 h-4 mr-2 text-white/50" />Skriv ut
+                              </DropdownMenuItem>
+                              {po.status === 'received' && (
+                                <DropdownMenuItem onClick={() => exportPOMutation.mutate(po.id)} disabled={exportPOMutation.isPending} className="text-white focus:bg-white/10 focus:text-white cursor-pointer">
+                                  <Download className="w-4 h-4 mr-2 text-white/50" />Exportera kvitto
+                                </DropdownMenuItem>
+                              )}
+                              {po.status === 'received' && !po.fortnox_incoming_goods_id && (
+                                <DropdownMenuItem onClick={async () => {
+                                  if (!confirm(`Synca inleverans till Fortnox för ${po.po_number || po.id.slice(0,8)}?`)) return;
+                                  const t = toast.loading("Syncar till Fortnox...");
+                                  try {
+                                    const res = await base44.functions.invoke('fortnoxSyncV2', {
+                                      purchaseOrderId: po.id,
+                                      createInboundDelivery: true
+                                    });
+                                    toast.dismiss(t);
+                                    const data = res.data;
+                                    if (data?.success) {
+                                      const skipped = data?.diagnostics?.skippedItems?.length || 0;
+                                      const gnr = data?.goodsReceiptNumber;
+                                      toast.success(
+                                        `✅ Inleverans skapad i Fortnox!${gnr ? ` (GR#${gnr})` : ''}${skipped > 0 ? ` · ${skipped} rad(er) hoppades över` : ''}`,
+                                        { duration: 6000 }
+                                      );
+                                    } else {
+                                      const errMsg = data?.errors?.[0] || data?.error || 'Okänt fel';
+                                      toast.error(`❌ Misslyckades: ${errMsg}`, { duration: 8000 });
+                                    }
+                                    queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+                                  } catch (e) {
+                                    toast.error('Misslyckades: ' + e.message, { id: t });
                                   }
+                                }} className="text-white focus:bg-white/10 focus:text-white cursor-pointer">
+                                  <Package className="w-4 h-4 mr-2 text-emerald-400" />Synca till Fortnox
+                                </DropdownMenuItem>
+                              )}
+                              {po.invoice_file_url && (
+                                <DropdownMenuItem onClick={() => window.open(po.invoice_file_url, '_blank')} className="text-white focus:bg-white/10 focus:text-white cursor-pointer">
+                                  <FileText className="w-4 h-4 mr-2 text-amber-400" />Faktura
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator className="bg-white/10" />
+                              <DropdownMenuItem onClick={async () => {
+                                try {
+                                  await base44.functions.invoke('fortnoxSyncV2', { purchaseOrderId: po.id });
+                                  toast.success('Order synkad med Fortnox!');
                                   queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
                                 } catch (e) {
-                                  toast.error('Misslyckades: ' + e.message, { id: t });
+                                  toast.error('Synk misslyckades');
                                 }
-                              }}
-                            >
-                              <Package className="w-4 h-4" />Synca till Fortnox
-                            </button>
-                          )}
-                          {po.status === 'received' && po.fortnox_incoming_goods_id && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
-                              <CheckCircle2 className="w-3.5 h-3.5" />Synkad FN #{po.fortnox_incoming_goods_id}
-                            </span>
-                          )}
-                          {po.invoice_file_url && (
-                            <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs text-amber-400 hover:bg-amber-500/10 transition-colors" onClick={() => window.open(po.invoice_file_url, '_blank')}>
-                              <FileText className="w-3 h-3" />Faktura
-                            </button>
-                          )}
-                          <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs text-emerald-400 hover:bg-emerald-500/10 transition-colors" onClick={() => setAccountingModalPO(po)}>
-                            <Send className="w-3 h-3" />Till ekonomi
-                          </button>
-                        </div>
-                        <div className="flex gap-1 flex-shrink-0 ml-2">
-                          <button className="px-2.5 py-1 rounded-md text-xs text-purple-400 hover:bg-purple-500/10 transition-colors" onClick={async () => {
-                            try {
-                              await base44.functions.invoke('fortnoxSyncV2', { 
-                                purchaseOrderId: po.id
-                              });
-                              toast.success('Order synkad med Fortnox!');
-                              queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
-                            } catch (e) {
-                              toast.error('Synk misslyckades');
-                            }
-                          }}>
-                            <TrendingUp className="w-3 h-3 mr-1 inline" />Synca
-                          </button>
-                          <button className="px-2.5 py-1 rounded-md text-xs text-white/40 hover:text-white hover:bg-white/8 transition-colors" onClick={() => { setEditingPO(po); setShowForm(true); }}>
-                            Redigera
-                          </button>
-                          <button className="px-2.5 py-1 rounded-md text-xs text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-colors" onClick={() => { if (confirm('Är du säker?')) deletePOMutation.mutate(po.id); }}>
-                            Ta bort
-                          </button>
+                              }} className="text-white focus:bg-white/10 focus:text-white cursor-pointer">
+                                <TrendingUp className="w-4 h-4 mr-2 text-purple-400" />Synca status
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/10" />
+                              <DropdownMenuItem onClick={() => { setEditingPO(po); setShowForm(true); }} className="text-white focus:bg-white/10 focus:text-white cursor-pointer">
+                                Redigera
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { if (confirm('Är du säker?')) deletePOMutation.mutate(po.id); }} className="text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer">
+                                Ta bort
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                     </div>

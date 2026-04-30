@@ -67,7 +67,7 @@ const ENTITIES = [
 
 // ── Fetch all records for an entity ──
 async function fetchEntity(entityName) {
-  const url = `https://api.base44.com/api/apps/${APP_ID}/entities/${entityName}`;
+  const baseUrl = `https://base44.app/api/apps/${APP_ID}/entities/${entityName}`;
   const allRecords = [];
   let page = 1;
   const limit = 1000;
@@ -75,22 +75,21 @@ async function fetchEntity(entityName) {
   console.log(`  Fetching ${entityName}...`);
 
   while (true) {
+    const skip = (page - 1) * limit;
+    const url = `${baseUrl}?limit=${limit}&skip=${skip}&sort=-created_date`;
+
     const resp = await fetch(url, {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${API_TOKEN}`,
+        'X-App-Id': APP_ID,
       },
-      body: JSON.stringify({
-        limit,
-        skip: (page - 1) * limit,
-        sort: { created_date: 'desc' },
-      }),
     });
 
     if (!resp.ok) {
       const text = await resp.text().catch(() => '');
-      console.error(`    ❌ HTTP ${resp.status}: ${text}`);
+      console.error(`    ❌ HTTP ${resp.status}: ${text.slice(0, 200)}`);
       return { entity: entityName, error: `HTTP ${resp.status}`, records: [] };
     }
 

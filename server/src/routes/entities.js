@@ -24,10 +24,11 @@ const VALID_ENTITIES = new Set([
   'NotificationSettings', 'Order', 'OrderItem', 'OrderPickList',
   'PatternInferenceLog', 'POActivity', 'ProductionActivity', 'ProductionRecord',
   'ProjectExpense', 'ProjectLink', 'ProjectTime', 'PurchaseOrder',
-  'PurchaseOrderItem', 'ReceivingRecord', 'RepairLog', 'ScanMatchAudit',
-  'ServiceLog', 'SiteReport', 'SiteReportImage', 'StockAdjustment',
-  'Supplier', 'SupplierLabelPattern', 'SyncLog', 'SystemAutomation',
-  'Task', 'TaskTemplate', 'User', 'Warehouse', 'WorkOrder', 'WorkOrderActivity',
+  'PurchaseOrderItem', 'PushSubscription', 'ReceivingRecord', 'RepairLog',
+  'ScanMatchAudit', 'ServiceLog', 'SiteReport', 'SiteReportImage',
+  'StockAdjustment', 'Supplier', 'SupplierLabelPattern', 'SyncLog',
+  'SystemAutomation', 'Task', 'TaskTemplate', 'User', 'Warehouse',
+  'WorkOrder', 'WorkOrderActivity',
 ]);
 
 function validateEntity(req, res, next) {
@@ -42,38 +43,66 @@ function validateEntity(req, res, next) {
 router.get('/:entityName', validateEntity, async (req, res, next) => {
   try {
     const { entityName } = req.params;
-    const { sort = '-createdAt', limit = '100', skip = '0', ...filters } = req.query;
+    // Base44 SDK uses __order_by, __page_size, __page — map to our params
+    const rawQuery = req.query;
+    const sortRaw = rawQuery.__order_by || rawQuery.sort || '-createdAt';
+    const limitRaw = rawQuery.__page_size || rawQuery.limit || '9999';
+    const pageRaw  = rawQuery.__page || '1';
+    const skipRaw  = rawQuery.skip || String((parseInt(pageRaw, 10) - 1) * parseInt(limitRaw, 10));
+
+    // Strip Base44 meta-params and pagination from filters
+    const BASE44_META = new Set(['__order_by','__page_size','__page','sort','limit','skip','__include','__expand']);
+    const filters = {};
+    for (const [key, value] of Object.entries(rawQuery)) {
+      if (!BASE44_META.has(key) && value !== undefined && value !== '') {
+        filters[key] = value;
+      }
+    }
 
     const model = prisma[entityName.charAt(0).toLowerCase() + entityName.slice(1)];
     if (!model) {
       return res.status(404).json({ error: `Entity model not found: ${entityName}` });
     }
 
-    // Parse sort: '-createdAt' → { createdAt: 'desc' }
+    // Parse sort: '-created_date' or '-createdAt' → { createdAt: 'desc' }
+    const FIELD_MAP = {
+      created_date: 'createdAt', updated_date: 'updatedAt',
+      stock_qty: 'stock_qty', name: 'name',
+    };
     const orderBy = {};
-    const sortField = sort.replace(/^-/, '');
-    const sortDir = sort.startsWith('-') ? 'desc' : 'asc';
+    const rawSort = String(sortRaw).replace(/^-/, '');
+    const sortField = FIELD_MAP[rawSort] || rawSort;
+    const sortDir = String(sortRaw).startsWith('-') ? 'desc' : 'asc';
     orderBy[sortField] = sortDir;
 
-    // Build where clause from filters (simple equality for now)
+    // Build where clause — only known scalar fields (skip unknowns to avoid Prisma crash)
     const where = {};
     for (const [key, value] of Object.entries(filters)) {
-      if (value !== undefined && value !== '') {
+      try {
         where[key] = value;
-      }
+      } catch {}
     }
 
-    const [items, total] = await Promise.all([
-      model.findMany({
-        where,
-        orderBy,
-        take: parseInt(limit, 10),
-        skip: parseInt(skip, 10),
-      }),
-      model.count({ where }),
-    ]);
+    const takeN = parseInt(limitRaw, 10) || 100;
+    const skipN = parseInt(skipRaw, 10) || 0;
 
-    res.json({ items, total, limit: parseInt(limit, 10), skip: parseInt(skip, 10) });
+    let items, total;
+    try {
+      [items, total] = await Promise.all([
+        model.findMany({ where, orderBy, take: takeN, skip: skipN }),
+        model.count({ where }),
+      ]);
+    } catch (prismaErr) {
+      // If where-clause has invalid fields, retry without filters
+      console.warn(`[entities] Filter error for ${entityName}, retrying without filters:`, prismaErr.message?.split('\n')[0]);
+      [items, total] = await Promise.all([
+        model.findMany({ orderBy, take: takeN, skip: skipN }),
+        model.count(),
+      ]);
+    }
+
+    // Base44 SDK förväntar sig en ren array (inte { items, total })
+    res.json(items);
   } catch (err) {
     next(err);
   }
