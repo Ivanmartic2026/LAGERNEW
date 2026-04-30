@@ -1,54 +1,242 @@
 <!doctype html>
 <html lang="sv" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>IM Vision · Design 2026 preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          sans:    ['Inter', 'system-ui', 'sans-serif'],
+          display: ['"Inter Tight"', 'Inter', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          background: 'hsl(0 0% 4%)',
+          surface: { 1: 'hsl(0 0% 7%)', 2: 'hsl(0 0% 10%)', 3: 'hsl(0 0% 13%)' },
+          foreground: 'hsl(0 0% 98%)',
+          signal:    { DEFAULT: 'hsl(264 100% 60%)', hi: 'hsl(264 100% 72%)', lo: 'hsl(264 100% 48%)' },
+          status: { ok: 'hsl(152 70% 48%)', warn: 'hsl(38 92% 60%)', bad: 'hsl(4 90% 62%)', info: 'hsl(210 90% 62%)' },
+        },
+      }
+    }
+  }
+</script>
+<style>
+  :root {
+    --signal: 264 100% 60%;
+    --status-ok: 152 70% 48%;
+    --status-warn: 38 92% 60%;
+    --status-bad: 4 90% 62%;
+    --status-info: 210 90% 62%;
+  }
+  html, body { background: hsl(0 0% 4%); color: hsl(0 0% 98%); font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .font-display { font-family: 'Inter Tight', Inter, system-ui, sans-serif; letter-spacing: -0.02em; }
+  .num-tabular { font-variant-numeric: tabular-nums; }
+  .hairline-strong { box-shadow: inset 0 0 0 1px hsl(0 0% 100% / 0.10); }
+  .glass {
+    background: linear-gradient(180deg, hsl(0 0% 100% / 0.04), hsl(0 0% 100% / 0.02));
+    backdrop-filter: saturate(180%) blur(20px);
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06), inset 0 0 0 1px hsl(0 0% 100% / 0.05);
+  }
+  .glow-signal {
+    box-shadow:
+      0 0 0 1px hsl(var(--signal) / 0.5),
+      0 8px 32px -8px hsl(var(--signal) / 0.55),
+      0 2px 8px -2px hsl(var(--signal) / 0.35);
+  }
+  .stroke-gradient { position: relative; }
+  .stroke-gradient::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: conic-gradient(from 180deg, hsl(var(--signal) / 0.0), hsl(var(--signal) / 0.6), hsl(210 100% 60% / 0.5), hsl(var(--signal) / 0.0));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+  }
+  .pill-bad  { background: hsl(var(--status-bad)/0.14);  color: hsl(var(--status-bad));  box-shadow: inset 0 0 0 1px hsl(var(--status-bad)/0.30); }
+  .pill-ok   { background: hsl(var(--status-ok)/0.14);   color: hsl(var(--status-ok));   box-shadow: inset 0 0 0 1px hsl(var(--status-ok)/0.30); }
+  .pill-warn { background: hsl(var(--status-warn)/0.14); color: hsl(var(--status-warn)); box-shadow: inset 0 0 0 1px hsl(var(--status-warn)/0.30); }
+  .pill-info { background: hsl(var(--status-info)/0.14); color: hsl(var(--status-info)); box-shadow: inset 0 0 0 1px hsl(var(--status-info)/0.30); }
+  .pill-signal { background: hsl(var(--signal)/0.14); color: hsl(var(--signal)); box-shadow: inset 0 0 0 1px hsl(var(--signal)/0.35); }
+  .focus-halo:focus { outline: none; box-shadow: inset 0 0 0 1px hsl(var(--signal)/0.7), 0 0 0 4px hsl(var(--signal)/0.18); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: hsl(0 0% 100% / 0.08); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+</style>
+</head>
+<body class="min-h-screen overflow-x-hidden">
 
-    <!-- Google Fonts: IM Vision brand typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Ropa+Sans&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <div aria-hidden class="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+    <div class="absolute -top-40 left-1/3 w-[60vw] h-[60vw] rounded-full opacity-[0.10] blur-3xl"
+         style="background: radial-gradient(circle, hsl(var(--signal)), transparent 65%)"></div>
+    <div class="absolute -bottom-40 -right-20 w-[50vw] h-[50vw] rounded-full opacity-[0.07] blur-3xl"
+         style="background: radial-gradient(circle, hsl(210 100% 60%), transparent 65%)"></div>
+  </div>
 
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json" />
+  <header class="hidden md:flex fixed top-4 left-4 right-4 z-50">
+    <div class="glass rounded-2xl flex items-center justify-between w-full px-4 h-14">
+      <div class="font-display text-sm tracking-tight">IM <span class="text-signal">Vision</span> · 2026</div>
+      <div class="flex items-center gap-1">
+        <button class="h-9 w-9 rounded-full hairline-strong text-foreground/70 hover:text-foreground hover:bg-white/[0.06]">⌕</button>
+        <button class="h-9 w-9 rounded-full hairline-strong text-foreground/70 hover:text-foreground hover:bg-white/[0.06]">↻</button>
+      </div>
+    </div>
+  </header>
 
-    <!-- Theme & status bar -->
-    <meta name="theme-color" content="#000000" />
-    <meta name="background-color" content="#000000" />
+  <nav class="hidden md:flex fixed bottom-5 left-1/2 -translate-x-1/2 z-50">
+    <div class="glass rounded-full px-2 h-14 flex items-center gap-1 shadow-2xl">
+      <button class="h-10 px-4 rounded-full hairline-strong bg-white/[0.08] text-sm font-medium tracking-tight">Lager</button>
+      <button class="h-10 px-4 rounded-full text-sm text-foreground/55 hover:text-foreground hover:bg-white/[0.06]">Ordrar</button>
+      <button class="h-10 px-4 rounded-full text-sm text-foreground/55 hover:text-foreground hover:bg-white/[0.06]">Arbetsorder</button>
+      <button class="h-10 px-4 rounded-full text-sm text-foreground/55 hover:text-foreground hover:bg-white/[0.06]">Inköp</button>
+      <button class="h-10 px-4 rounded-full text-sm text-foreground/55 hover:text-foreground hover:bg-white/[0.06]">Projekt</button>
+      <button class="h-10 px-4 rounded-full text-sm text-foreground/55 hover:text-foreground hover:bg-white/[0.06]">Admin</button>
+    </div>
+  </nav>
 
-    <!-- iOS PWA — CRITICAL for standalone/fullscreen on iPhone/iPad -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Lager AI" />
-    <link rel="apple-touch-icon" sizes="180x180" href="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69455d52c9eab36b7d26cc74/d7db28e4b_LogoLIGGANDE_IMvision_VITtkopia.png" />
-    <!-- iPhone 15/14 Pro Max (430×932×3) -->
-    <link rel="apple-touch-startup-image" href="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69455d52c9eab36b7d26cc74/d7db28e4b_LogoLIGGANDE_IMvision_VITtkopia.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
-    <!-- iPhone 15/14 Pro (393×852×3) -->
-    <link rel="apple-touch-startup-image" href="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69455d52c9eab36b7d26cc74/d7db28e4b_LogoLIGGANDE_IMvision_VITtkopia.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" />
-    <!-- iPhone 15/14 Plus (428×926×3) -->
-    <link rel="apple-touch-startup-image" href="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69455d52c9eab36b7d26cc74/d7db28e4b_LogoLIGGANDE_IMvision_VITtkopia.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" />
-    <!-- iPhone SE (375×667×2) -->
-    <link rel="apple-touch-startup-image" href="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69455d52c9eab36b7d26cc74/d7db28e4b_LogoLIGGANDE_IMvision_VITtkopia.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
-    <!-- iPhone 13/12 (390×844×3) -->
-    <link rel="apple-touch-startup-image" href="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69455d52c9eab36b7d26cc74/d7db28e4b_LogoLIGGANDE_IMvision_VITtkopia.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+  <main class="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-24 space-y-12">
 
-    <!-- Android PWA -->
-    <meta name="mobile-web-app-capable" content="yes" />
+    <header class="space-y-3">
+      <span class="text-[11px] uppercase tracking-[0.18em] text-white/45">IM Vision · Design System 2026</span>
+      <h1 class="font-display text-4xl md:text-6xl tracking-tight">Tesla touch. Apple polish.</h1>
+      <p class="text-white/60 max-w-2xl text-lg">En statisk preview av tokens, primitiver och layout — inga API‑anrop, ingen inloggning.</p>
 
-    <!-- SEO & Social -->
-    <meta name="description" content="Lagerstyrning och orderhantering för IMvision" />
-    <meta name="application-name" content="Lager AI" />
-    <meta property="og:title" content="Lager AI — IMvision" />
-    <meta property="og:description" content="Lagerstyrning och orderhantering" />
-    <meta property="og:type" content="website" />
+      <div class="flex flex-wrap gap-2 pt-2">
+        <button class="h-10 px-5 rounded-full bg-signal text-white text-[14px] font-medium glow-signal">Primary CTA →</button>
+        <button class="h-10 px-5 rounded-full bg-white text-black text-[14px] font-medium">Default</button>
+        <button class="h-10 px-5 rounded-full bg-white/[0.06] hairline-strong text-[14px] font-medium hover:bg-white/[0.10]">Secondary</button>
+        <button class="h-10 px-5 rounded-full hairline-strong text-[14px] font-medium hover:bg-white/[0.04]">Outline</button>
+        <button class="h-10 px-5 rounded-full text-white/80 text-[14px] font-medium hover:bg-white/[0.06]">Ghost</button>
+        <button class="h-10 px-5 rounded-full bg-status-bad text-white text-[14px] font-medium">Destructive</button>
+      </div>
+    </header>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69455d52c9eab36b7d26cc74/d7db28e4b_LogoLIGGANDE_IMvision_VITtkopia.png" />
+    <section>
+      <p class="text-[11px] uppercase tracking-[0.18em] text-white/45">01</p>
+      <h2 class="font-display text-3xl tracking-tight mb-4">Färg & ytor</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="rounded-2xl p-4 hairline-strong h-24 flex flex-col justify-between" style="background: hsl(0 0% 4%)"><span class="text-[11px] uppercase tracking-widest">Background</span><span class="text-[11px] text-white/50">hsl(0 0% 4%)</span></div>
+        <div class="rounded-2xl p-4 hairline-strong h-24 flex flex-col justify-between" style="background: hsl(0 0% 7%)"><span class="text-[11px] uppercase tracking-widest">Surface 1</span><span class="text-[11px] text-white/50">hsl(0 0% 7%)</span></div>
+        <div class="rounded-2xl p-4 hairline-strong h-24 flex flex-col justify-between" style="background: hsl(0 0% 10%)"><span class="text-[11px] uppercase tracking-widest">Surface 2</span><span class="text-[11px] text-white/50">hsl(0 0% 10%)</span></div>
+        <div class="rounded-2xl p-4 hairline-strong h-24 flex flex-col justify-between" style="background: hsl(0 0% 13%)"><span class="text-[11px] uppercase tracking-widest">Surface 3</span><span class="text-[11px] text-white/50">hsl(0 0% 13%)</span></div>
+        <div class="rounded-2xl p-4 h-24 flex flex-col justify-between glow-signal" style="background: hsl(var(--signal))"><span class="text-[11px] uppercase tracking-widest text-white">Signal</span><span class="text-[11px] text-white/80">accent neon</span></div>
+        <div class="rounded-2xl p-4 hairline-strong h-24 flex flex-col justify-between" style="background: hsl(var(--status-ok)/0.18)"><span class="text-[11px] uppercase tracking-widest text-status-ok">Status OK</span><span class="text-[11px] text-status-ok/70">verified</span></div>
+        <div class="rounded-2xl p-4 hairline-strong h-24 flex flex-col justify-between" style="background: hsl(var(--status-warn)/0.18)"><span class="text-[11px] uppercase tracking-widest text-status-warn">Status warn</span><span class="text-[11px] text-status-warn/70">pending</span></div>
+        <div class="rounded-2xl p-4 hairline-strong h-24 flex flex-col justify-between" style="background: hsl(var(--status-bad)/0.18)"><span class="text-[11px] uppercase tracking-widest text-status-bad">Status bad</span><span class="text-[11px] text-status-bad/70">quarantine</span></div>
+      </div>
+    </section>
 
-    <title>Lager AI</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+    <section>
+      <p class="text-[11px] uppercase tracking-[0.18em] text-white/45">02</p>
+      <h2 class="font-display text-3xl tracking-tight mb-4">KPI‑rutnät</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div class="relative rounded-2xl glass p-5 stroke-gradient overflow-hidden">
+          <div class="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-30 blur-2xl" style="background: radial-gradient(circle, hsl(var(--signal)), transparent 65%)"></div>
+          <div class="flex items-start justify-between"><span class="text-[11px] uppercase tracking-[0.12em] text-white/55">Aktiva ordrar</span><span class="w-8 h-8 rounded-full hairline-strong text-signal flex items-center justify-center">●</span></div>
+          <div class="mt-3 flex items-baseline gap-2"><span class="font-display font-semibold tracking-tight num-tabular text-3xl md:text-4xl">124</span></div>
+          <div class="mt-2"><span class="inline-flex items-center gap-1 h-5 px-1.5 rounded-full text-[11px] num-tabular pill-ok">▲ 4.2%</span></div>
+        </div>
+        <div class="relative rounded-2xl glass p-5 overflow-hidden">
+          <div class="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-30 blur-2xl" style="background: radial-gradient(circle, hsl(var(--status-ok)), transparent 65%)"></div>
+          <div class="flex items-start justify-between"><span class="text-[11px] uppercase tracking-[0.12em] text-white/55">Veckans leveranser</span><span class="w-8 h-8 rounded-full hairline-strong text-status-ok flex items-center justify-center">↗</span></div>
+          <div class="mt-3 flex items-baseline gap-2"><span class="font-display font-semibold tracking-tight num-tabular text-3xl md:text-4xl">38</span><span class="text-sm text-white/55 num-tabular">v18</span></div>
+          <div class="mt-2"><span class="inline-flex items-center gap-1 h-5 px-1.5 rounded-full text-[11px] num-tabular pill-ok">▲ 12.5%</span></div>
+        </div>
+        <div class="relative rounded-2xl glass p-5 overflow-hidden cursor-pointer">
+          <div class="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-30 blur-2xl" style="background: radial-gradient(circle, hsl(var(--status-bad)), transparent 65%)"></div>
+          <div class="flex items-start justify-between"><span class="text-[11px] uppercase tracking-[0.12em] text-white/55">Karantän</span><span class="w-8 h-8 rounded-full hairline-strong text-status-bad flex items-center justify-center">⚠</span></div>
+          <div class="mt-3 flex items-baseline gap-2"><span class="font-display font-semibold tracking-tight num-tabular text-3xl md:text-4xl">3</span></div>
+        </div>
+        <div class="relative rounded-2xl glass p-5 overflow-hidden">
+          <div class="absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-30 blur-2xl" style="background: radial-gradient(circle, hsl(var(--status-warn)), transparent 65%)"></div>
+          <div class="flex items-start justify-between"><span class="text-[11px] uppercase tracking-[0.12em] text-white/55">Flaskhalsar</span><span class="w-8 h-8 rounded-full hairline-strong text-status-warn flex items-center justify-center">!</span></div>
+          <div class="mt-3 flex items-baseline gap-2"><span class="font-display font-semibold tracking-tight num-tabular text-3xl md:text-4xl">2</span></div>
+          <div class="mt-2"><span class="inline-flex items-center gap-1 h-5 px-1.5 rounded-full text-[11px] num-tabular pill-bad">▼ 1.4%</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="text-[11px] uppercase tracking-[0.18em] text-white/45">03</p>
+      <h2 class="font-display text-3xl tracking-tight mb-4">Glaskort & inputs</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 rounded-2xl glass p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-display text-lg tracking-tight">Pipeline per fas</h3>
+            <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 h-6 text-[11px] font-medium hairline-strong bg-white/[0.06]">live</span>
+          </div>
+          <div class="grid grid-cols-5 gap-3 h-44 items-end">
+            <div class="bg-signal rounded-t-xl" style="height: 70%"></div>
+            <div class="bg-signal rounded-t-xl" style="height: 50%"></div>
+            <div class="bg-signal rounded-t-xl" style="height: 95%"></div>
+            <div class="bg-signal rounded-t-xl" style="height: 38%"></div>
+            <div class="bg-signal rounded-t-xl" style="height: 26%"></div>
+          </div>
+          <div class="grid grid-cols-5 gap-3 text-[11px] text-white/50 num-tabular">
+            <span>Sälj</span><span>Konstr</span><span>Prod</span><span>Lager</span><span>Mont</span>
+          </div>
+        </div>
+        <div class="rounded-2xl glass p-6 space-y-3">
+          <h3 class="font-display text-lg tracking-tight">Kimi AI · idag</h3>
+          <div class="flex items-baseline justify-between"><span class="text-sm text-white/55">Scanningar</span><span class="font-display num-tabular">42</span></div>
+          <div class="flex items-baseline justify-between"><span class="text-sm text-white/55">Avg confidence</span><span class="font-display num-tabular">0.94</span></div>
+          <div class="flex items-baseline justify-between"><span class="text-sm text-white/55">Kostnad månaden</span><span class="font-display num-tabular">$18.42</span></div>
+          <div class="flex items-baseline justify-between"><span class="text-sm text-white/55">Totalt skannat</span><span class="font-display num-tabular">1 287</span></div>
+          <button class="w-full h-10 rounded-full hairline-strong hover:bg-white/[0.04] text-sm font-medium tracking-tight mt-2">Öppna AI‑logg</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="text-[11px] uppercase tracking-[0.18em] text-white/45">04</p>
+      <h2 class="font-display text-3xl tracking-tight mb-4">Form‑element & badges</h2>
+      <div class="rounded-2xl glass p-6 space-y-4">
+        <input type="search" placeholder="Sök artiklar, ordrar, batcher…"
+               class="focus-halo h-11 w-full rounded-xl px-4 bg-white/[0.04] hairline-strong text-foreground placeholder:text-white/40" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <input type="email" placeholder="Email"     class="focus-halo h-11 w-full rounded-xl px-4 bg-white/[0.04] hairline-strong placeholder:text-white/40" />
+          <input type="password" placeholder="Lösenord" class="focus-halo h-11 w-full rounded-xl px-4 bg-white/[0.04] hairline-strong placeholder:text-white/40" />
+        </div>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-[11px] font-medium pill-ok">● Aktiv</span>
+          <span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-[11px] font-medium pill-warn">● Plockning</span>
+          <span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-[11px] font-medium pill-bad">● Karantän</span>
+          <span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-[11px] font-medium pill-info">● I produktion</span>
+          <span class="inline-flex items-center gap-1 h-6 px-2.5 rounded-full text-[11px] font-medium pill-signal">● Signal</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="text-[11px] uppercase tracking-[0.18em] text-white/45">05</p>
+      <h2 class="font-display text-3xl tracking-tight mb-4">Karantän‑inbox</h2>
+      <div class="rounded-2xl glass stroke-gradient p-4">
+        <ul class="divide-y divide-white/[0.06]">
+          <li class="flex items-center justify-between gap-3 px-2 py-3 rounded-xl hover:bg-white/[0.04] transition">
+            <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-status-bad" style="box-shadow: 0 0 8px hsl(var(--status-bad))"></span><span class="font-medium num-tabular">B-2026-0421</span></div>
+            <div class="flex items-center gap-3"><span class="text-[12px] text-white/55 hidden sm:block">Servoblock SK-12</span><span class="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] pill-bad">risk 84</span></div>
+          </li>
+          <li class="flex items-center justify-between gap-3 px-2 py-3 rounded-xl hover:bg-white/[0.04] transition">
+            <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-status-bad" style="box-shadow: 0 0 8px hsl(var(--status-bad))"></span><span class="font-medium num-tabular">B-2026-0418</span></div>
+            <div class="flex items-center gap-3"><span class="text-[12px] text-white/55 hidden sm:block">Kabelhärva A2</span><span class="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] pill-bad">risk 67</span></div>
+          </li>
+          <li class="flex items-center justify-between gap-3 px-2 py-3 rounded-xl hover:bg-white/[0.04] transition">
+            <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-status-bad" style="box-shadow: 0 0 8px hsl(var(--status-bad))"></span><span class="font-medium num-tabular">B-2026-0417</span></div>
+            <div class="flex items-center gap-3"><span class="text-[12px] text-white/55 hidden sm:block">Sensorpaket V3</span><span class="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] pill-bad">risk 92</span></div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="pt-8 pb-32 text-center text-white/40 text-xs tracking-widest uppercase">
+      IM Vision Design System · 2026 preview
+    </footer>
+  </main>
+
+  <button class="fixed bottom-24 right-5 w-14 h-14 rounded-full bg-signal text-white glow-signal z-40 flex items-center justify-center text-2xl">●</button>
+</body>
 </html>
