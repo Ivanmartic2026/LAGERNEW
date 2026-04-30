@@ -5,6 +5,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Printer, History } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { filterVisibleTabs, canEditTab } from "@/lib/permissions";
 
 import WorkOrderHeader from "@/components/workorders/WorkOrderHeader";
 import ProcessFlow from "@/components/workorders/ProcessFlow";
