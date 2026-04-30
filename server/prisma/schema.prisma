@@ -620,6 +620,7 @@ enum WorkOrderInstallation_type {
 }
 
 enum WorkOrderCurrent_stage {
+  inkorg
   konstruktion
   produktion
   lager
@@ -1779,6 +1780,68 @@ model WorkOrder {
   materials_ready_count         Int      @default(0)
   materials_ordered_count       Int      @default(0)
   materials_missing_count       Int      @default(0)
+
+  // ── Phase tracking (ProcessBoard v2) ──
+  red_flag_active               Boolean  @default(false)
+  red_flag_reasons              String[]
+  back_forth_count              Int      @default(0)
+  last_phase_changed_at         DateTime?
+
+  // ── Pause / Cancel ──
+  paused_at                     DateTime?
+  pause_reason                  String?
+  cancelled_at                  DateTime?
+  cancel_reason                 String?
+
+  // ── Soft delete ──
+  deleted_at                    DateTime?
+
+  // ── Relations ──
+  roles                         WorkOrderRole[]
+
+  @@index([current_stage])
+  @@index([delivery_date])
+  @@index([status])
+  @@index([deleted_at])
+}
+
+enum WorkOrderRoleType {
+  projektledare
+  konstruktor
+  produktion
+  lager
+  tekniker
+  saljare
+}
+
+model WorkOrderRole {
+  id              String           @id @default(uuid())
+  createdAt       DateTime         @default(now()) @map("created_date")
+  updatedAt       DateTime         @updatedAt @map("updated_date")
+
+  work_order_id   String
+  role            WorkOrderRoleType
+  user_id         String
+  user_name       String?
+  assigned_at     DateTime         @default(now())
+  assigned_by     String?
+
+  workOrder       WorkOrder        @relation(fields: [work_order_id], references: [id])
+
+  @@unique([work_order_id, role, user_id])
+  @@index([work_order_id, role])
+  @@index([user_id, role])
+}
+
+model SavedBoardView {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now()) @map("created_date")
+  updatedAt   DateTime @updatedAt @map("updated_date")
+
+  user_id     String
+  name        String
+  filters     Json
+  is_default  Boolean  @default(false)
 }
 
 model WorkOrderMaterial {

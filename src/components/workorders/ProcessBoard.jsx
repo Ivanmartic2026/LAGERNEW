@@ -1,39 +1,28 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import {
-  Pencil, Package, Factory, Wrench, CheckCircle2,
-  PackageOpen, MessageSquare, ChevronRight,
-  CircleDot, Bell,
+  Pencil, Package, Factory, Wrench, CheckCircle2, Inbox,
+  PackageOpen, ChevronRight, CircleDot, Bell,
+  Search,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { sv } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
 
 // ── Attention reasons ──────────────────────────────────────────
 function getAttentionReasons(wo) {
   const reasons = [];
-  const isOverdue = wo.delivery_date && new Date(wo.delivery_date) < new Date();
+  const isOverdue = wo.deliveryDate && new Date(wo.deliveryDate) < new Date();
   if (isOverdue) reasons.push({ key: 'overdue', label: 'Försenad', color: 'red' });
-  if (wo.is_blocked) reasons.push({ key: 'blocked', label: 'Blockerad', color: 'red' });
-
-  const stageOwnerMap = {
-    konstruktion: wo.assigned_to_konstruktion,
-    produktion: wo.assigned_to_produktion,
-    lager: wo.assigned_to_lager,
-    montering: wo.assigned_to_montering,
-    leverans: wo.assigned_to_leverans,
-  };
-  if (!stageOwnerMap[wo.current_stage]) {
+  if (wo.isBlocked) reasons.push({ key: 'blocked', label: 'Blockerad', color: 'red' });
+  if (!wo.currentResponsible) {
     reasons.push({ key: 'no_owner', label: 'Saknar ansvarig', color: 'amber' });
   }
-  if (!wo.planned_deadline) reasons.push({ key: 'no_date', label: 'Saknar planerat datum', color: 'amber' });
-  if (wo.needs_procurement) reasons.push({ key: 'procurement', label: 'Inköp kräver beslut', color: 'amber' });
-  if (wo.materials_missing_count > 0) reasons.push({ key: 'missing', label: 'Material saknas', color: 'red' });
-  if (wo.materials_missing_count > 0 && wo.materials_ordered_count > 0) {
-    reasons.push({ key: 'delivery_delay', label: 'Försenad leverans', color: 'red' });
-  }
+  if (!wo.plannedDeadline) reasons.push({ key: 'no_date', label: 'Saknar planerat datum', color: 'amber' });
+  if (wo.materialsMissing > 0) reasons.push({ key: 'missing', label: 'Material saknas', color: 'red' });
   return reasons;
 }
 
@@ -43,6 +32,22 @@ function needsAttention(wo) {
 
 // ── Process lane configuration ─────────────────────────────────
 const PROCESS_LANES = [
+  {
+    key: 'inkorg',
+    label: 'Inkorg',
+    shortLabel: 'Inkorg',
+    icon: Inbox,
+    accent: 'slate',
+    bg: 'bg-slate-500/10',
+    border: 'border-slate-500/20',
+    text: 'text-slate-400',
+    headerBg: 'bg-[#1f1f1f]',
+    headerBorder: 'border-[#3f3f3f]',
+    getOwner: (wo) => wo.currentResponsible?.userName,
+    getRoleLabel: () => 'projektledare',
+    getAction: (wo) => wo.currentResponsible ? 'Granska & tilldela' : 'Tilldela projektledare',
+    emptyText: 'Inga nya ordrar i inkorgen',
+  },
   {
     key: 'konstruktion',
     label: 'Konstruktion',
@@ -54,9 +59,10 @@ const PROCESS_LANES = [
     text: 'text-sky-400',
     headerBg: 'bg-[#1a2f3f]',
     headerBorder: 'border-[#2a4f6f]',
-    getOwner: (wo) => wo.assigned_to_konstruktion_name,
+    getOwner: (wo) => wo.currentResponsible?.userName,
     getRoleLabel: () => 'konstruktör',
-    getAction: (wo) => wo.assigned_to_konstruktion ? 'Fortsätt konstruktion' : 'Tilldela konstruktör',
+    getAction: (wo) => wo.currentResponsible ? 'Fortsätt konstruktion' : 'Tilldela konstruktör',
+    emptyText: 'Inga order att konstruera',
   },
   {
     key: 'produktion',
@@ -69,9 +75,10 @@ const PROCESS_LANES = [
     text: 'text-blue-400',
     headerBg: 'bg-[#1a1f3f]',
     headerBorder: 'border-[#2a3f6f]',
-    getOwner: (wo) => wo.assigned_to_produktion_name,
+    getOwner: (wo) => wo.currentResponsible?.userName,
     getRoleLabel: () => 'produktionsansvarig',
-    getAction: (wo) => wo.assigned_to_produktion ? 'Starta produktion' : 'Tilldela produktionsansvarig',
+    getAction: (wo) => wo.currentResponsible ? 'Starta produktion' : 'Tilldela produktionsansvarig',
+    emptyText: 'Inga order i produktion',
   },
   {
     key: 'lager',
@@ -84,9 +91,10 @@ const PROCESS_LANES = [
     text: 'text-orange-400',
     headerBg: 'bg-[#3f2a1a]',
     headerBorder: 'border-[#6f4a2a]',
-    getOwner: (wo) => wo.assigned_to_lager_name,
+    getOwner: (wo) => wo.currentResponsible?.userName,
     getRoleLabel: () => 'lageransvarig',
-    getAction: (wo) => wo.assigned_to_lager ? 'Kontrollera & plocka material' : 'Tilldela lageransvarig',
+    getAction: (wo) => wo.currentResponsible ? 'Kontrollera & plocka material' : 'Tilldela lageransvarig',
+    emptyText: 'Inga order att plocka',
   },
   {
     key: 'montering',
@@ -99,9 +107,10 @@ const PROCESS_LANES = [
     text: 'text-purple-400',
     headerBg: 'bg-[#2a1a3f]',
     headerBorder: 'border-[#4a2a6f]',
-    getOwner: (wo) => wo.assigned_to_montering_name || wo.technician_name,
+    getOwner: (wo) => wo.currentResponsible?.userName,
     getRoleLabel: () => 'montör',
-    getAction: (wo) => wo.assigned_to_montering ? 'Planera montage' : 'Tilldela montör',
+    getAction: (wo) => wo.currentResponsible ? 'Planera montage' : 'Tilldela montör',
+    emptyText: 'Inga order att montera',
   },
   {
     key: 'leverans',
@@ -114,9 +123,10 @@ const PROCESS_LANES = [
     text: 'text-emerald-400',
     headerBg: 'bg-[#1a3f2a]',
     headerBorder: 'border-[#2a6f4a]',
-    getOwner: (wo) => wo.assigned_to_leverans_name,
+    getOwner: (wo) => wo.currentResponsible?.userName,
     getRoleLabel: () => 'leveransansvarig',
     getAction: () => 'Markera som levererad',
+    emptyText: 'Inga order att leverera',
   },
 ];
 
@@ -150,6 +160,7 @@ function ReasonBadge({ reason }) {
 function ActionButton({ action, accent, onClick }) {
   const accentMap = {
     sky: 'bg-sky-500/20 text-sky-300 border-sky-500/30 hover:bg-sky-500/30',
+    slate: 'bg-slate-500/20 text-slate-300 border-slate-500/30 hover:bg-slate-500/30',
     violet: 'bg-violet-500/20 text-violet-300 border-violet-500/30 hover:bg-violet-500/30',
     amber: 'bg-amber-500/20 text-amber-300 border-amber-500/30 hover:bg-amber-500/30',
     orange: 'bg-orange-500/20 text-orange-300 border-orange-500/30 hover:bg-orange-500/30',
@@ -176,13 +187,12 @@ function AttentionCard({ wo }) {
   const navigate = useNavigate();
   const reasons = getAttentionReasons(wo);
   const isUrgent = wo.priority === 'urgent' || wo.priority === 'high';
-  const unreadCount = wo._unreadCount || 0;
 
-  const deadlineText = wo.delivery_date
-    ? format(new Date(wo.delivery_date), 'd MMM', { locale: sv })
+  const deadlineText = wo.deliveryDate
+    ? format(new Date(wo.deliveryDate), 'd MMM', { locale: sv })
     : null;
-  const daysToDeadline = wo.delivery_date
-    ? Math.ceil((new Date(wo.delivery_date) - new Date()) / (1000 * 60 * 60 * 24))
+  const daysToDeadline = wo.deliveryDate
+    ? Math.ceil((new Date(wo.deliveryDate) - new Date()) / (1000 * 60 * 60 * 24))
     : null;
   const isOverdue = daysToDeadline < 0 && wo.status !== 'completed';
 
@@ -191,9 +201,7 @@ function AttentionCard({ wo }) {
     navigate(`/WorkOrders/${wo.id}`);
   };
 
-  // Primary action for attention lane: always "Granska" since something needs attention
-  const action = wo.is_blocked ? 'Granska blockerare'
-    : wo.needs_procurement ? 'Godkänn inköp'
+  const action = wo.isBlocked ? 'Granska blockerare'
     : 'Granska & åtgärda';
 
   return (
@@ -203,11 +211,11 @@ function AttentionCard({ wo }) {
       animate={{ opacity: 1, y: 0 }}
       className={cn(
         'rounded-xl border p-3.5 cursor-pointer transition-all',
-        isUrgent || isOverdue || wo.is_blocking
+        isUrgent || isOverdue || wo.isBlocked
           ? 'bg-white/8 border-red-500/20 hover:border-red-500/40'
           : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] hover:border-white/10',
         isOverdue && 'border-l-[3px] border-l-red-500',
-        wo.is_blocking && 'border-l-[3px] border-l-red-500'
+        wo.isBlocked && 'border-l-[3px] border-l-red-500'
       )}
       onClick={() => navigate(`/WorkOrders/${wo.id}`)}
     >
@@ -221,22 +229,16 @@ function AttentionCard({ wo }) {
       {/* ── Header: name + priority ── */}
       <div className="flex items-start justify-between gap-2 mb-1">
         <h3 className="text-sm font-semibold text-white truncate leading-tight">
-          {wo.name || wo.order_number || `AO-${wo.id.slice(0, 6)}`}
+          {wo.name || wo.orderNumber || `AO-${wo.id.slice(0, 6)}`}
         </h3>
         <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-          {unreadCount > 0 && (
-            <span className="flex items-center gap-0.5 text-[10px] text-white/40">
-              <MessageSquare className="w-3 h-3" />
-              {unreadCount}
-            </span>
-          )}
           <div className={cn('w-1.5 h-1.5 rounded-full', PRIORITY_DOT[wo.priority] || PRIORITY_DOT.normal)} />
         </div>
       </div>
 
       {/* ── Customer + deadline ── */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-[11px] text-white/50 truncate">{wo.customer_name}</span>
+        <span className="text-[11px] text-white/50 truncate">{wo.customerName}</span>
         {deadlineText && (
           <span className={cn(
             'text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0',
@@ -251,7 +253,7 @@ function AttentionCard({ wo }) {
       <div className="mb-2">
         <span className="inline-flex items-center gap-1 text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-md">
           <CircleDot className="w-3 h-3" />
-          Nu i: {wo.current_stage}
+          Nu i: {wo.phase}
         </span>
       </div>
 
@@ -267,13 +269,12 @@ function ProcessCard({ wo, lane }) {
   const owner = lane.getOwner(wo);
   const action = lane.getAction(wo);
   const isUrgent = wo.priority === 'urgent' || wo.priority === 'high';
-  const unreadCount = wo._unreadCount || 0;
 
-  const deadlineText = wo.delivery_date
-    ? format(new Date(wo.delivery_date), 'd MMM', { locale: sv })
+  const deadlineText = wo.deliveryDate
+    ? format(new Date(wo.deliveryDate), 'd MMM', { locale: sv })
     : null;
-  const daysToDeadline = wo.delivery_date
-    ? Math.ceil((new Date(wo.delivery_date) - new Date()) / (1000 * 60 * 60 * 24))
+  const daysToDeadline = wo.deliveryDate
+    ? Math.ceil((new Date(wo.deliveryDate) - new Date()) / (1000 * 60 * 60 * 24))
     : null;
   const isOverdue = daysToDeadline < 0 && wo.status !== 'completed';
 
@@ -292,21 +293,19 @@ function ProcessCard({ wo, lane }) {
         isUrgent || isOverdue
           ? 'bg-white/8 border-orange-500/20 hover:border-orange-500/40'
           : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] hover:border-white/10',
-        isOverdue && 'border-l-[3px] border-l-red-500'
+        isOverdue && 'border-l-[3px] border-l-red-500',
+        wo.redFlagActive && 'border-l-[3px] border-l-amber-500'
       )}
       onClick={() => navigate(`/WorkOrders/${wo.id}`)}
     >
-      {/* ── Header: name + priority ── */}
+      {/* ── Header: name + priority + watch + pendling ── */}
       <div className="flex items-start justify-between gap-2 mb-1">
         <h3 className="text-sm font-semibold text-white truncate leading-tight">
-          {wo.name || wo.order_number || `AO-${wo.id.slice(0, 6)}`}
+          {wo.name || wo.orderNumber || `AO-${wo.id.slice(0, 6)}`}
         </h3>
         <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-          {unreadCount > 0 && (
-            <span className="flex items-center gap-0.5 text-[10px] text-white/40">
-              <MessageSquare className="w-3 h-3" />
-              {unreadCount}
-            </span>
+          {wo.isPendling && (
+            <span className="text-[10px] text-amber-400 font-bold" title="Pendlad order">🔄</span>
           )}
           <div className={cn('w-1.5 h-1.5 rounded-full', PRIORITY_DOT[wo.priority] || PRIORITY_DOT.normal)} />
         </div>
@@ -314,7 +313,7 @@ function ProcessCard({ wo, lane }) {
 
       {/* ── Customer + deadline ── */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-[11px] text-white/50 truncate">{wo.customer_name}</span>
+        <span className="text-[11px] text-white/50 truncate">{wo.customerName}</span>
         {deadlineText && (
           <span className={cn(
             'text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0',
@@ -324,6 +323,13 @@ function ProcessCard({ wo, lane }) {
           </span>
         )}
       </div>
+
+      {/* ── Delivery address / carrier ── */}
+      {(wo.deliveryAddress || wo.shippingCarrier) && (
+        <div className="text-[11px] text-white/30 mb-2 truncate">
+          {wo.deliveryAddress}{wo.shippingCarrier ? ` · ${wo.shippingCarrier}` : ''}
+        </div>
+      )}
 
       {/* ── Owner ── */}
       <div className="flex items-center gap-2 mb-3">
@@ -347,6 +353,22 @@ function ProcessCard({ wo, lane }) {
         )}
       </div>
 
+      {/* ── Gate progress (placeholder) ── */}
+      {wo.gateProgress && wo.gateProgress.total > 0 && (
+        <div className="mb-3">
+          <div className="flex items-center justify-between text-[10px] mb-1">
+            <span className="text-white/40">Gate-checklista</span>
+            <span className="text-white/60">{wo.gateProgress.completed}/{wo.gateProgress.total}</span>
+          </div>
+          <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-emerald-500/60 transition-all"
+              style={{ width: `${wo.gateProgress.total > 0 ? (wo.gateProgress.completed / wo.gateProgress.total) * 100 : 0}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* ── Primary action button ── */}
       {action && (
         <div className="mb-3">
@@ -354,9 +376,9 @@ function ProcessCard({ wo, lane }) {
         </div>
       )}
 
-      {/* ── Material status (always shown) ── */}
+      {/* ── Material status ── */}
       <div className="pt-2 border-t border-white/5">
-        {wo.materials_total_count > 0 ? (
+        {wo.materialsTotal > 0 ? (
           <div>
             <div className="flex items-center justify-between text-[11px] mb-1">
               <span className="text-white/40 flex items-center gap-1">
@@ -365,31 +387,31 @@ function ProcessCard({ wo, lane }) {
               </span>
               <span className={cn(
                 'font-bold',
-                wo.materials_missing_count > 0 ? 'text-red-400' : 'text-emerald-400'
+                wo.materialsMissing > 0 ? 'text-red-400' : 'text-emerald-400'
               )}>
-                {wo.materials_ready_count || 0}/{wo.materials_total_count} klart
+                {wo.materialsReady}/{wo.materialsTotal} klart
               </span>
             </div>
             <div className="h-1 rounded-full bg-white/5 overflow-hidden mb-1.5">
               <div
                 className={cn(
                   'h-full rounded-full transition-all',
-                  wo.materials_missing_count > 0 ? 'bg-red-500/60' : 'bg-emerald-500/60'
+                  wo.materialsMissing > 0 ? 'bg-red-500/60' : 'bg-emerald-500/60'
                 )}
                 style={{
-                  width: `${wo.materials_total_count > 0 ? Math.min(100, ((wo.materials_ready_count || 0) / wo.materials_total_count) * 100) : 0}%`,
+                  width: `${wo.materialsTotal > 0 ? Math.min(100, (wo.materialsReady / wo.materialsTotal) * 100) : 0}%`,
                 }}
               />
             </div>
             <div className="flex flex-wrap gap-1">
-              {wo.materials_missing_count > 0 && (
+              {wo.materialsMissing > 0 && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/15 text-red-400 font-medium">
-                  {wo.materials_missing_count} saknas
+                  {wo.materialsMissing} saknas
                 </span>
               )}
-              {wo.materials_ordered_count > 0 && (
+              {wo.materialsOrdered > 0 && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-400 font-medium">
-                  {wo.materials_ordered_count} beställda
+                  {wo.materialsOrdered} beställda
                 </span>
               )}
             </div>
@@ -440,13 +462,7 @@ function LaneColumn({ lane, orders }) {
         <div className="text-center py-6 px-4">
           <Icon className="w-6 h-6 text-white/10 mx-auto mb-2" />
           <p className="text-xs text-white/25 font-medium">{lane.label}</p>
-          <p className="text-[11px] text-white/15 mt-1">
-            {lane.key === 'lager' && 'Inga order att plocka'}
-            {lane.key === 'produktion' && 'Inga order i produktion'}
-            {lane.key === 'montering' && 'Inga order att montera'}
-            {lane.key === 'leverans' && 'Inga order att leverera'}
-            {lane.key === 'konstruktion' && 'Inga order att konstruera'}
-          </p>
+          <p className="text-[11px] text-white/15 mt-1">{lane.emptyText}</p>
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -460,34 +476,46 @@ function LaneColumn({ lane, orders }) {
 }
 
 // ── Main board ─────────────────────────────────────────────────
-export default function ProcessBoard({ workOrders, searchQuery, unreadByWO }) {
-  const { attentionOrders, processLanes } = useMemo(() => {
-    const filtered = workOrders.filter((wo) => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
-      return (
-        wo.order_number?.toLowerCase().includes(q) ||
-        wo.customer_name?.toLowerCase().includes(q) ||
-        wo.name?.toLowerCase().includes(q)
-      );
-    });
+export default function ProcessBoard({ columns = {}, totals = {}, isLoading }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('all');
 
-    const enriched = filtered.map((wo) => ({ ...wo, _unreadCount: unreadByWO[wo.id] || 0 }));
+  const allOrders = useMemo(() => {
+    return Object.values(columns).flat();
+  }, [columns]);
 
-    const attention = enriched.filter(needsAttention);
+  const filteredColumns = useMemo(() => {
+    const result = {};
+    for (const [key, orders] of Object.entries(columns)) {
+      result[key] = orders.filter((wo) => {
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+          wo.orderNumber?.toLowerCase().includes(q) ||
+          wo.customerName?.toLowerCase().includes(q) ||
+          wo.name?.toLowerCase().includes(q)
+        );
+      });
+    }
+    return result;
+  }, [columns, searchQuery]);
 
-    const lanes = PROCESS_LANES.map((lane) => ({
-      ...lane,
-      orders: enriched.filter((wo) => wo.current_stage === lane.key),
-    }));
-
-    return { attentionOrders: attention, processLanes: lanes };
-  }, [workOrders, searchQuery, unreadByWO]);
+  const attentionOrders = useMemo(() => {
+    return allOrders.filter(needsAttention);
+  }, [allOrders]);
 
   const totalInProcess = useMemo(
-    () => processLanes.reduce((sum, lane) => sum + lane.orders.length, 0),
-    [processLanes]
+    () => Object.values(filteredColumns).reduce((sum, arr) => sum + arr.length, 0),
+    [filteredColumns]
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-4 border-white/10 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (totalInProcess === 0 && attentionOrders.length === 0) {
     return (
@@ -506,6 +534,39 @@ export default function ProcessBoard({ workOrders, searchQuery, unreadByWO }) {
       exit={{ opacity: 0 }}
       className="space-y-6"
     >
+      {/* ── Filters & Search ── */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <div className="relative flex-1 w-full sm:max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+          <Input
+            placeholder="Sök ordernr, kund..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-white/30"
+          />
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setActiveFilter('all')}
+            className={cn(
+              'text-xs px-3 py-1.5 rounded-lg border transition-colors',
+              activeFilter === 'all' ? 'bg-white/10 border-white/20 text-white' : 'bg-transparent border-white/10 text-white/50 hover:bg-white/5'
+            )}
+          >
+            Alla ({totals.all})
+          </button>
+          <button
+            onClick={() => setActiveFilter('overdue')}
+            className={cn(
+              'text-xs px-3 py-1.5 rounded-lg border transition-colors',
+              activeFilter === 'overdue' ? 'bg-red-500/15 border-red-500/30 text-red-400' : 'bg-transparent border-white/10 text-white/50 hover:bg-white/5'
+            )}
+          >
+            🔴 Försenade ({totals.overdue})
+          </button>
+        </div>
+      </div>
+
       {/* ── Section 1: Attention lane ── */}
       {attentionOrders.length > 0 && (
         <div>
@@ -540,8 +601,8 @@ export default function ProcessBoard({ workOrders, searchQuery, unreadByWO }) {
         </div>
         <div className="overflow-x-auto pb-4 -mx-4 px-4">
           <div className="flex gap-4 min-w-max">
-            {processLanes.map((lane) => (
-              <LaneColumn key={lane.key} lane={lane} orders={lane.orders} />
+            {PROCESS_LANES.map((lane) => (
+              <LaneColumn key={lane.key} lane={lane} orders={filteredColumns[lane.key] || []} />
             ))}
           </div>
         </div>

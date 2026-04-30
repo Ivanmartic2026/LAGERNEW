@@ -20,6 +20,7 @@ import { setupPushNotifications } from '../functions/setupPushNotifications.js';
 import { sendPushNotification } from '../functions/sendPushNotification.js';
 import { getWorkOrderMaterials } from '../functions/getWorkOrderMaterials.js';
 import { getPurchaseNeeds } from '../functions/getPurchaseNeeds.js';
+import { getBoard } from '../functions/getBoard.js';
 
 const router = Router();
 
@@ -38,6 +39,7 @@ const handlers = {
   sendPushNotification,
   getWorkOrderMaterials,
   getPurchaseNeeds,
+  getBoard,
 };
 
 router.post('/:functionName', (req, res, next) => {

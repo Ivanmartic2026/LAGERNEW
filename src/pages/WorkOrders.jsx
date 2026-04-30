@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Search, Package, Factory, CheckCircle2, Truck, Zap,
   ArrowRight, ClipboardList, Plus, Trash2, Edit2, Download,
-  MessageSquare, ChevronRight, Pencil, Play, ArrowUpCircle,
+  MessageSquare, ChevronRight, Pencil,
 } from "lucide-react";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
@@ -18,11 +18,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import CreateProductionWorkOrderModal from "@/components/workorders/CreateProductionWorkOrderModal";
 import { resolveStage, ORDER_STAGES } from "@/components/workorders/ProcessFlow";
 import UnreadBadge from "@/components/workorders/UnreadBadge";
-import { StatusBadge } from "@/components/ui/status-badge";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import { RowActionsDropdown, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/row-actions";
 import QuickWithdrawalModal from "@/components/inventory/QuickWithdrawalModal";
 import ProcessBoard from "@/components/workorders/ProcessBoard";
+import { useBoard } from "@/hooks/useBoard";
 
 const STAGE_META = {
   konstruktion: { label: 'Konstruktion',   accent: 'sky',     icon: Pencil,     cta: 'Fortsätt',  ctaColor: 'bg-sky-600/20 text-sky-400 hover:bg-sky-600/30 border-sky-500/30' },
@@ -243,6 +244,8 @@ export default function WorkOrdersPage() {
     refetchOnWindowFocus: true
   });
 
+  const { data: boardData, isLoading: isBoardLoading } = useBoard({ assignedTo: 'all' });
+
   const { data: allMessages = [] } = useQuery({
     queryKey: ['chat_messages_all_wo'],
     queryFn: () => base44.entities.ChatMessage.filter({ deleted: false }, '-created_date', 500),
@@ -363,9 +366,9 @@ export default function WorkOrdersPage() {
                 exit={{ opacity: 0 }}
               >
                 <ProcessBoard
-                  workOrders={workOrders}
-                  searchQuery={searchQuery}
-                  unreadByWO={unreadByWO}
+                  columns={boardData?.columns || {}}
+                  totals={boardData?.totals || {}}
+                  isLoading={isBoardLoading}
                 />
               </motion.div>
             ) : activeTab === 'active' ? (

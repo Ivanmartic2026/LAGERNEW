@@ -133,7 +133,7 @@ export const base44 = {
   functions: {
     invoke: async (functionName, params = {}) => {
       try {
-        const r = await fetch(`/api/functions/${functionName}`, {
+        const r = await fetch(`/api/v1/functions/${functionName}`, {
           method: 'POST',
           headers: authHeaders(),
           body: JSON.stringify(params),
