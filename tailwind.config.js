@@ -5,18 +5,31 @@ module.exports = {
     theme: {
         extend: {
             borderRadius: {
+                xl: 'calc(var(--radius) + 4px)',
                 lg: 'var(--radius)',
-                md: 'calc(var(--radius) - 2px)',
-                sm: 'calc(var(--radius) - 4px)'
+                md: 'calc(var(--radius) - 6px)',
+                sm: 'calc(var(--radius) - 10px)',
             },
             fontFamily: {
-                brand: ['Ropa Sans', 'sans-serif'],
-                body: ['Roboto', 'sans-serif'],
-                sans: ['Roboto', 'sans-serif'],
+                sans:    ['Inter', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'system-ui', 'sans-serif'],
+                display: ['Inter Tight', 'Inter', 'system-ui', 'sans-serif'],
+                body:    ['Inter', 'system-ui', 'sans-serif'],
+                brand:   ['Inter Tight', 'Inter', 'system-ui', 'sans-serif'],
+            },
+            letterSpacing: {
+                tightest: '-0.04em',
+                tighter:  '-0.03em',
+                tight:    '-0.02em',
             },
             colors: {
                 background: 'hsl(var(--background))',
                 foreground: 'hsl(var(--foreground))',
+                surface: {
+                    DEFAULT: 'hsl(var(--surface-1))',
+                    1: 'hsl(var(--surface-1))',
+                    2: 'hsl(var(--surface-2))',
+                    3: 'hsl(var(--surface-3))',
+                },
                 card: {
                     DEFAULT: 'hsl(var(--card))',
                     foreground: 'hsl(var(--card-foreground))'
@@ -49,12 +62,16 @@ module.exports = {
                 input: 'hsl(var(--input))',
                 ring: 'hsl(var(--ring))',
                 signal: {
-                    DEFAULT: '#6300FF',
-                    hover: '#5200D9',
-                    active: '#4400B3',
-                    subtle: '#F3EAFF',
-                    light: '#E0C8FF',
-                    900: '#280066',
+                    DEFAULT: 'hsl(var(--signal))',
+                    hi:      'hsl(var(--signal-hi))',
+                    lo:      'hsl(var(--signal-lo))',
+                    soft:    'hsl(var(--signal-soft))',
+                },
+                status: {
+                    ok:   'hsl(var(--status-ok))',
+                    warn: 'hsl(var(--status-warn))',
+                    bad:  'hsl(var(--status-bad))',
+                    info: 'hsl(var(--status-info))',
                 },
                 chart: {
                     '1': 'hsl(var(--chart-1))',
@@ -63,42 +80,41 @@ module.exports = {
                     '4': 'hsl(var(--chart-4))',
                     '5': 'hsl(var(--chart-5))'
                 },
-                sidebar: {
-                    DEFAULT: 'hsl(var(--sidebar-background))',
-                    foreground: 'hsl(var(--sidebar-foreground))',
-                    primary: 'hsl(var(--sidebar-primary))',
-                    'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-                    accent: 'hsl(var(--sidebar-accent))',
-                    'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-                    border: 'hsl(var(--sidebar-border))',
-                    ring: 'hsl(var(--sidebar-ring))'
-                }
+            },
+            boxShadow: {
+                'glow-signal': '0 0 0 1px hsl(var(--signal) / 0.5), 0 8px 32px -8px hsl(var(--signal) / 0.55), 0 2px 8px -2px hsl(var(--signal) / 0.35)',
+                'card-1': '0 1px 0 hsl(0 0% 100% / 0.05) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6)',
+                'card-2': '0 1px 0 hsl(0 0% 100% / 0.06) inset, 0 16px 40px -20px rgb(0 0 0 / 0.7)',
+            },
+            backdropBlur: {
+                xs: '4px',
+            },
+            transitionTimingFunction: {
+                'apple': 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+                'tesla': 'cubic-bezier(0.16, 1, 0.3, 1)',
             },
             keyframes: {
-                'accordion-down': {
-                    from: { height: '0' },
-                    to: { height: 'var(--radix-accordion-content-height)' }
-                },
-                'accordion-up': {
-                    from: { height: 'var(--radix-accordion-content-height)' },
-                    to: { height: '0' }
-                }
+                'accordion-down': { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },
+                'accordion-up':   { from: { height: 'var(--radix-accordion-content-height)' }, to: { height: '0' } },
+                'fade-up':        { from: { opacity: '0', transform: 'translateY(8px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+                'shimmer':        { from: { backgroundPosition: '0 0' }, to: { backgroundPosition: '-200% 0' } },
+                'pulse-soft':     { '0%, 100%': { opacity: '0.6' }, '50%': { opacity: '1' } },
             },
             animation: {
-                'accordion-down': 'accordion-down 0.2s ease-out',
-                'accordion-up': 'accordion-up 0.2s ease-out'
+                'accordion-down': 'accordion-down 0.22s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                'accordion-up':   'accordion-up 0.18s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                'fade-up':        'fade-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both',
+                'shimmer':        'shimmer 2s linear infinite',
+                'pulse-soft':     'pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             }
         }
     },
     safelist: [
-        'badge-verified', 'badge-pending', 'badge-quarantine', 'badge-blocked', 'badge-info',
-        'bg-signal', 'bg-signal/10', 'bg-signal/20', 'text-signal', 'border-signal',
-        'hover:bg-signal-hover', 'active:bg-signal-active', 'shadow-signal/30',
-        'bg-green-100', 'text-green-800', 'border-green-200',
-        'bg-amber-100', 'text-amber-800', 'border-amber-200',
-        'bg-red-100', 'text-red-800', 'border-red-200',
-        'bg-orange-100', 'text-orange-800', 'border-orange-200',
-        'bg-sky-100', 'text-sky-800', 'border-sky-200',
+        'pill', 'pill-ok', 'pill-warn', 'pill-bad', 'pill-info', 'pill-signal',
+        'glass', 'glass-strong', 'hairline', 'hairline-strong',
+        'glow-signal', 'glow-soft', 'stroke-gradient', 'num-tabular',
+        // legacy classes kept for in-flight code that still references them
+        'bg-signal', 'text-signal', 'border-signal',
     ],
     plugins: [require("tailwindcss-animate")],
 }

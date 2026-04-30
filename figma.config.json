@@ -1,0 +1,12 @@
+{
+  "$schema": "https://www.figma.com/code-connect/schema.json",
+  "codeConnect": {
+    "include": ["src/components/ui/**/*.figma.jsx"],
+    "exclude": ["**/node_modules/**", "**/build/**", "**/dist/**"],
+    "parser": "react",
+    "importPaths": {
+      "src/components/ui/*": "@/components/ui/{component}"
+    },
+    "label": "React (IMvision Lager)"
+  }
+}

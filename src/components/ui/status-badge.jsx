@@ -122,9 +122,9 @@ export function StatusBadge({
   const colorClass = COLOR_STYLES[config.color] || COLOR_STYLES.slate;
 
   const sizeClasses = {
-    sm: 'text-[10px] px-1.5 py-0.5 gap-1',
-    md: 'text-xs px-2.5 py-1 gap-1.5',
-    lg: 'text-sm px-3 py-1.5 gap-2',
+    sm: 'h-5  text-[10px] px-2   gap-1',
+    md: 'h-6  text-[11px] px-2.5 gap-1.5',
+    lg: 'h-7  text-[12px] px-3   gap-2',
   };
 
   const iconSizes = {
@@ -136,7 +136,7 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border font-medium whitespace-nowrap',
+        'inline-flex items-center rounded-full border font-medium tracking-tight num-tabular whitespace-nowrap transition-colors',
         colorClass,
         sizeClasses[size],
         className

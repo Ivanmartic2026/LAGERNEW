@@ -2,37 +2,34 @@ import * as React from "react"
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils"
 
+/**
+ * IM Vision 2026 — Badge
+ * Pill, tabular numerals, hairline border, low-saturation tinted bg.
+ * Replaces the kindergarten 100/800 palette with theme-aware HSL tints.
+ */
 const badgeVariants = cva(
-  "inline-flex items-center border px-2.5 py-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 font-brand text-[11px] tracking-[0.05em] rounded",
+  "inline-flex items-center gap-1.5 rounded-full px-2.5 h-6 text-[11px] font-medium tracking-tight num-tabular transition-colors",
   {
     variants: {
       variant: {
-        // Default: signal purple (primary brand)
         default:
-          "border-transparent bg-signal text-white shadow",
-        // Status: verified / active
-        verified:
-          "bg-green-100 text-green-800 border-green-200",
-        // Status: pending / waiting
-        pending:
-          "bg-amber-100 text-amber-800 border-amber-200",
-        // Status: quarantine / error
-        quarantine:
-          "bg-red-100 text-red-800 border-red-200",
-        // Status: blocked
-        blocked:
-          "bg-orange-100 text-orange-800 border-orange-200",
-        // Status: info
-        info:
-          "bg-sky-100 text-sky-800 border-sky-200",
-        // Secondary / neutral
+          "bg-signal/15 text-signal-hi [box-shadow:inset_0_0_0_1px_hsl(var(--signal)/0.35)]",
         secondary:
-          "border-transparent bg-muted text-muted-foreground",
-        // Destructive alias
+          "bg-white/[0.06] text-foreground/85 hairline-strong",
+        outline:
+          "bg-transparent text-foreground/85 hairline-strong",
+        verified:
+          "bg-status-ok/15 text-status-ok [box-shadow:inset_0_0_0_1px_hsl(var(--status-ok)/0.30)]",
+        pending:
+          "bg-status-warn/15 text-status-warn [box-shadow:inset_0_0_0_1px_hsl(var(--status-warn)/0.30)]",
+        quarantine:
+          "bg-status-bad/15 text-status-bad [box-shadow:inset_0_0_0_1px_hsl(var(--status-bad)/0.30)]",
+        blocked:
+          "bg-status-warn/15 text-status-warn [box-shadow:inset_0_0_0_1px_hsl(var(--status-warn)/0.30)]",
+        info:
+          "bg-status-info/15 text-status-info [box-shadow:inset_0_0_0_1px_hsl(var(--status-info)/0.30)]",
         destructive:
-          "border-transparent bg-red-100 text-red-800 border-red-200",
-        // Outline
-        outline: "text-foreground border-border",
+          "bg-status-bad/15 text-status-bad [box-shadow:inset_0_0_0_1px_hsl(var(--status-bad)/0.30)]",
       },
     },
     defaultVariants: {

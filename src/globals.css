@@ -1,30 +1,9 @@
-/* IM Vision Brand — signal color utilities (used by Tailwind safelist) */
-:root {
-  --signal: #6300FF;
-  --signal-hover: #5200D9;
-  --signal-active: #4400B3;
-  --signal-subtle: #F3EAFF;
-  --signal-light: #E0C8FF;
-}
+/*
+ * IM Vision 2026 — supplementary globals
+ * The main token & typography system lives in src/index.css.
+ * This file only carries low-level mobile/PWA tweaks that are still required.
+ */
 
-/* Tailwind arbitrary-value helpers for signal color */
-.bg-signal        { background-color: #6300FF !important; }
-.bg-signal-hover  { background-color: #5200D9 !important; }
-.bg-signal-active { background-color: #4400B3 !important; }
-.bg-signal\/10    { background-color: rgba(99,0,255,0.10) !important; }
-.bg-signal\/20    { background-color: rgba(99,0,255,0.20) !important; }
-.text-signal      { color: #6300FF !important; }
-.border-signal    { border-color: #6300FF !important; }
-.ring-signal      { --tw-ring-color: #6300FF !important; }
-.shadow-signal\/30{ --tw-shadow-color: rgba(99,0,255,0.30) !important; }
-.hover\:bg-signal-hover:hover { background-color: #5200D9 !important; }
-.active\:bg-signal-active:active { background-color: #4400B3 !important; }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* PWA Mobile Optimizations */
 body {
   -webkit-user-select: none;
   user-select: none;
@@ -34,14 +13,12 @@ body {
   overscroll-behavior: none;
 }
 
-/* Allow text selection in content areas */
 .select-text,
 .select-text * {
   -webkit-user-select: text !important;
   user-select: text !important;
 }
 
-/* iOS specific */
 body.ios {
   position: fixed;
   width: 100%;
@@ -56,119 +33,26 @@ input, textarea, select {
   font-size: 16px;
 }
 
-/* Disable zoom on input focus iOS */
 @supports (-webkit-touch-callout: none) {
-  input, textarea, select {
-    font-size: 16px;
-  }
+  input, textarea, select { font-size: 16px; }
 }
 
-/* Smooth scrolling for list views */
-.scroll-smooth {
-  scroll-behavior: smooth;
-}
+.scroll-smooth { scroll-behavior: smooth; }
+.will-change-auto { will-change: auto; }
 
-/* Prevent flickering on transitions */
-.will-change-auto {
-  will-change: auto;
-}
-
-/* Optimize animations on mobile */
 @media (max-width: 768px) {
-  * {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-  }
-  
-}
-
-/* Safe area insets for notch devices */
-@supports (padding: max(0px)) {
-  body {
-    padding-left: max(12px, env(safe-area-inset-left));
-    padding-right: max(12px, env(safe-area-inset-right));
-    padding-top: max(12px, env(safe-area-inset-top));
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
-  }
-}
-
-/* Prevent double tap zoom */
-input, button, a {
-  -webkit-touch-callout: none;
-}
-
-/* Touch-optimized elements */
-@media (max-width: 768px) {
-  /* Larger touch targets */
-  button, a, input[type="checkbox"], input[type="radio"], select {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  /* Larger text for better readability on mobile */
-  body {
-    font-size: 16px;
-  }
-  
-  /* Prevent iOS zoom on input focus */
-  input[type="text"],
-  input[type="email"],
-  input[type="number"],
-  input[type="tel"],
-  input[type="search"],
-  textarea,
-  select {
-    font-size: 16px !important;
-  }
-  
-  /* Better scroll performance */
   * {
     -webkit-overflow-scrolling: touch;
   }
-  
-  /* Optimize font rendering for mobile */
-  body {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-  }
 }
 
-/* High performance GPU acceleration */
 .gpu-accelerate {
-  -webkit-transform: translateZ(0);
-  -webkit-perspective: 1000;
+  transform: translateZ(0);
   perspective: 1000;
 }
 
-/* Image optimization for slow connections */
-@media (prefers-reduced-data: reduce) {
-  img {
-    content: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect fill="%23ccc" width="400" height="300"/></svg>');
-  }
-}
-
-/* Reduce motion for accessibility */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Loading state animation (lighter weight) */
 @keyframes pulse-light {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
 }
-
-.animate-pulse-light {
-  animation: pulse-light 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
+.animate-pulse-light { animation: pulse-light 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }

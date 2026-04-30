@@ -1,23 +1,25 @@
 import React, { useEffect, useState as useReactState } from 'react';
-import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, Camera, Package, Menu, X, MapPin, Activity, FileText, ShoppingCart, PackageSearch, ClipboardList, Truck, Clipboard, BarChart2, Layers, Users, Clock, Car, Scan, CheckCircle2, RefreshCw, Lightbulb, GitMerge, Search, ArrowLeft } from "lucide-react";
+import {
+  Camera, Package, Menu, X, MapPin, Activity, FileText,
+  ShoppingCart, PackageSearch, ClipboardList, BarChart2, Layers,
+  Users, Clock, Car, Scan, CheckCircle2, RefreshCw, Lightbulb, GitMerge,
+  Search, ArrowLeft, ChevronLeft, ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import QuickWithdrawalModal from "@/components/inventory/QuickWithdrawalModal";
 import CommandMenu from "@/components/search/CommandMenu";
-import RecentActivityWidget from "@/components/activity/RecentActivityWidget";
 import OfflineIndicator from "@/components/pwa/OfflineIndicator";
 import PWAOptimizer from "@/components/pwa/PWAOptimizer";
 import PushManager from "@/components/pwa/PushManager";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
-import { LanguageProvider } from "@/components/language/LanguageProvider";
+import { LanguageProvider, useLanguage } from "@/components/language/LanguageProvider";
 import LanguageToggle from "@/components/language/LanguageToggle";
-import { useLanguage } from "@/components/language/LanguageProvider";
-import { t, tOrderStatus, tStage, tWorkOrderStatus, tPriority } from "@/components/language/translations";
+import { t } from "@/components/language/translations";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { queryClientInstance } from '@/lib/query-client';
@@ -26,20 +28,28 @@ import IOSInstallPrompt from "@/components/pwa/IOSInstallPrompt";
 import IOSPushPrompt from "@/components/pwa/IOSPushPrompt";
 import SWUpdateForcer from "@/components/pwa/SWUpdateForcer";
 
-// Detect if mobile for performance optimization
-const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
+/**
+ * IM Vision 2026 Layout
+ * --------------------------------------------------------------------------
+ *  - Desktop: floating glass top bar + a centered glass "Tesla dock" at the
+ *    bottom with pill segments and a neon active indicator.
+ *  - Mobile : floating glass top bar + bottom tab bar (Apple Dock feel).
+ *  - Page transitions: spring + subtle blur for depth.
+ * --------------------------------------------------------------------------
+ */
+
+const SPRING = { type: "spring", stiffness: 380, damping: 32, mass: 0.6 };
 
 function LayoutContent({ children, currentPageName }) {
   const { language } = useLanguage();
   const [userModules, setUserModules] = useReactState([]);
-  const [loadingUser, setLoadingUser] = useReactState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const [navCollapsed, setNavCollapsed] = useReactState(() => localStorage.getItem('nav_collapsed') === 'true');
-  
-  // Independent navigation stacks for each tab
+  const [navCollapsed, setNavCollapsed] = useReactState(
+    () => localStorage.getItem('nav_collapsed') === 'true',
+  );
+
   const [navigationStacks, setNavigationStacks] = useReactState(() => {
-    // Clear any stale nav stacks that might point to wrong pages
     localStorage.removeItem('nav_stacks');
     return {};
   });
@@ -51,113 +61,91 @@ function LayoutContent({ children, currentPageName }) {
         setUserModules(user?.allowed_modules || []);
       } catch (error) {
         console.error('Failed to fetch user data:', error);
-      } finally {
-        setLoadingUser(false);
       }
     };
-
     fetchUserData();
   }, []);
 
   const NAV_ITEMS = [
-    { name: "Inventory", label: t('nav_inventory', language), icon: Package, module: null },
-    { name: "Orders", label: t('nav_orders', language), icon: ShoppingCart, module: "Orders" },
-    { name: "WorkOrders", label: t('nav_work_orders', language), icon: ClipboardList, module: null },
-    { name: "PurchaseOrders", label: t('nav_purchase', language), icon: ShoppingCart, module: "PurchaseOrders" },
-    { name: "SiteReports", label: t('nav_site', language), icon: MapPin, module: "SiteReports" },
-    { name: "Repairs", label: t('nav_repairs', language), icon: Activity, module: "Repairs" },
-    { name: "ProjectResults", label: t('nav_projects', language), icon: BarChart2, module: null },
-    { name: "Admin", label: t('nav_admin', language), icon: FileText, module: null }
+    { name: "Inventory",      label: t('nav_inventory', language),    icon: Package,        module: null },
+    { name: "Orders",         label: t('nav_orders', language),       icon: ShoppingCart,   module: "Orders" },
+    { name: "WorkOrders",     label: t('nav_work_orders', language),  icon: ClipboardList,  module: null },
+    { name: "PurchaseOrders", label: t('nav_purchase', language),     icon: ShoppingCart,   module: "PurchaseOrders" },
+    { name: "SiteReports",    label: t('nav_site', language),         icon: MapPin,         module: "SiteReports" },
+    { name: "Repairs",        label: t('nav_repairs', language),      icon: Activity,       module: "Repairs" },
+    { name: "ProjectResults", label: t('nav_projects', language),     icon: BarChart2,      module: null },
+    { name: "Admin",          label: t('nav_admin', language),        icon: FileText,       module: null },
   ];
 
-  // Admin sub-links shown when on Admin page
   const ADMIN_SUB_ITEMS = [
     { name: "WorkspaceProjects", label: t('nav_workspace', language), icon: Layers },
-    { name: "MedarbetarOversikt", label: t('nav_employees', language), icon: Users },
-    { name: "TidsRapport", label: t('nav_timesheet', language), icon: Clock },
-    { name: "KilometerErsattning", label: t('nav_mileage', language), icon: Car },
-    { name: "FortnoxSync", label: "Fortnox", icon: ShoppingCart },
-    { name: "FortnoxCustomers", label: "Fortnox-kunder", icon: ShoppingCart },
-    { name: "BatchDashboard", label: "Batch AI", icon: Scan },
-    { name: "BatchReview", label: "Batch Review", icon: CheckCircle2 },
-    { name: "BatchSuggestions", label: "Förslag", icon: Lightbulb },
-    { name: "BatchReanalyze", label: "Omanalysera", icon: RefreshCw },
-    { name: "UsersManagement", label: "Användare", icon: Users },
-    { name: "MigrationCenter", label: "Migration", icon: RefreshCw },
-    { name: "MatchReview", label: "Match Review", icon: Search },
-    { name: "PatternRules", label: "Mönster", icon: GitMerge },
+    { name: "MedarbetarOversikt",label: t('nav_employees', language), icon: Users },
+    { name: "TidsRapport",       label: t('nav_timesheet', language), icon: Clock },
+    { name: "KilometerErsattning",label: t('nav_mileage', language),  icon: Car },
+    { name: "FortnoxSync",       label: "Fortnox",                    icon: ShoppingCart },
+    { name: "FortnoxCustomers",  label: "Fortnox-kunder",             icon: ShoppingCart },
+    { name: "BatchDashboard",    label: "Batch AI",                   icon: Scan },
+    { name: "BatchReview",       label: "Batch Review",               icon: CheckCircle2 },
+    { name: "BatchSuggestions",  label: "Förslag",                    icon: Lightbulb },
+    { name: "BatchReanalyze",    label: "Omanalysera",                icon: RefreshCw },
+    { name: "UsersManagement",   label: "Användare",                  icon: Users },
+    { name: "MigrationCenter",   label: "Migration",                  icon: RefreshCw },
+    { name: "MatchReview",       label: "Match Review",               icon: Search },
+    { name: "PatternRules",      label: "Mönster",                    icon: GitMerge },
   ];
 
-  const visibleNavItems = NAV_ITEMS.filter(item => !item.module || userModules.includes(item.module));
+  const visibleNavItems = NAV_ITEMS.filter(
+    item => !item.module || userModules.includes(item.module),
+  );
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
-  const mobile = isMobile();
-  
-  // Save navigation stacks when location changes
+  const [mobileMenuOpen, setMobileMenuOpen]       = useState(false);
+  const [withdrawalModalOpen, setWithdrawalOpen]  = useState(false);
+
+  // Persist nav stacks
   useEffect(() => {
-    const currentTab = visibleNavItems.find(item => 
-      location.pathname.toLowerCase().includes(`/${item.name.toLowerCase()}`)
+    const currentTab = visibleNavItems.find(item =>
+      location.pathname.toLowerCase().includes(`/${item.name.toLowerCase()}`),
     );
-    
     if (currentTab) {
       const newStacks = { ...navigationStacks };
-      if (!newStacks[currentTab.name]) {
-        newStacks[currentTab.name] = [];
-      }
-      
-      // Only add if different from last entry
+      if (!newStacks[currentTab.name]) newStacks[currentTab.name] = [];
       const lastPath = newStacks[currentTab.name][newStacks[currentTab.name].length - 1];
       if (lastPath !== location.pathname) {
         newStacks[currentTab.name].push(location.pathname);
-        // Keep only last 10 paths per tab
-        if (newStacks[currentTab.name].length > 10) {
-          newStacks[currentTab.name].shift();
-        }
+        if (newStacks[currentTab.name].length > 10) newStacks[currentTab.name].shift();
         setNavigationStacks(newStacks);
         localStorage.setItem('nav_stacks', JSON.stringify(newStacks));
       }
     }
   }, [location.pathname]);
-  
-  // Handle tab navigation with stack restoration
+
   const handleTabClick = (tabName) => {
     const stack = navigationStacks[tabName];
     const tabRoot = `/${tabName.toLowerCase()}`;
     if (stack && stack.length > 0) {
-      // Only restore if the last path is actually under this tab's root
       const lastPath = stack[stack.length - 1];
-      if (lastPath.toLowerCase().startsWith(tabRoot)) {
-        navigate(lastPath);
-        return;
-      }
+      if (lastPath.toLowerCase().startsWith(tabRoot)) { navigate(lastPath); return; }
     }
-    // Navigate to tab root
     navigate(createPageUrl(tabName));
   };
 
-  // Check if we should show back button (deeper than root tabs)
   const rootPages = visibleNavItems.map(item => `/${item.name.toLowerCase()}`);
   const isDeepPage = !rootPages.includes(location.pathname.toLowerCase()) && location.pathname !== '/';
 
-  // Register manifest for PWA
+  // PWA setup
   useEffect(() => {
     if (!document.querySelector('link[rel="manifest"]')) {
       const link = document.createElement('link');
       link.rel = 'manifest';
-      link.href = 'data:application/json;base64,eyJuYW1lIjoiSU12aXNpb24gTGFnZXIgJiBPcmRlciIsInNob3J0X25hbWUiOiJJTXZpc2lvbiIsImRlc2NyaXB0aW9uIjoiTGFnZXJzdHlybmluZyBvY2ggb3JkZXJoYW5kZXJpbmcgZsO2ciBJTXZpc2lvbiIsInN0YXJ0X3VybCI6Ii8iLCJzY29wZSI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsIm9yaWVudGF0aW9uIjoicG9ydHJhaXQtcHJpbWFyeSIsImJhY2tncm91bmRfY29sb3IiOiIjMDAwMDAwIiwidGhlbWVfY29sb3IiOiIjMjU2M2ViIiwicHJlZmVyX3JlbGF0ZWRfYXBwbGljYXRpb25zIjpmYWxzZX0=';
+      link.href = 'data:application/json;base64,eyJuYW1lIjoiSU12aXNpb24gTGFnZXIgJiBPcmRlciIsInNob3J0X25hbWUiOiJJTXZpc2lvbiIsImRlc2NyaXB0aW9uIjoiTGFnZXJzdHlybmluZyBvY2ggb3JkZXJoYW5kZXJpbmcgZsO2ciBJTXZpc2lvbiIsInN0YXJ0X3VybCI6Ii8iLCJzY29wZSI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsIm9yaWVudGF0aW9uIjoicG9ydHJhaXQtcHJpbWFyeSIsImJhY2tncm91bmRfY29sb3IiOiIjMDAwMDAwIiwidGhlbWVfY29sb3IiOiIjMDAwMDAwIiwicHJlZmVyX3JlbGF0ZWRfYXBwbGljYXRpb25zIjpmYWxzZX0=';
       document.head.appendChild(link);
     }
-
-    // Viewport optimization for mobile
     if (!document.querySelector('meta[name="viewport"]')) {
       const viewport = document.createElement('meta');
       viewport.name = 'viewport';
       viewport.content = 'width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no';
       document.head.appendChild(viewport);
     }
-
-    // iOS app mode
     const appleStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
     if (!appleStatusBar) {
       const meta = document.createElement('meta');
@@ -167,245 +155,230 @@ function LayoutContent({ children, currentPageName }) {
     }
   }, []);
 
+  const NavTile = ({ item, active, compact }) => (
+    <button
+      key={item.name}
+      onClick={() => handleTabClick(item.name)}
+      className={cn(
+        "relative flex items-center gap-2 px-3 h-10 rounded-full",
+        "transition-all duration-300 ease-apple group",
+        active ? "text-foreground" : "text-foreground/55 hover:text-foreground",
+      )}
+    >
+      {active && (
+        <motion.div
+          layoutId="dock-active"
+          transition={SPRING}
+          className="absolute inset-0 rounded-full bg-white/[0.08] hairline-strong"
+        />
+      )}
+      <span className="relative z-10 flex items-center gap-2">
+        <item.icon className="w-4 h-4" />
+        {!compact && (
+          <span className="text-[13px] font-medium tracking-tight whitespace-nowrap">
+            {item.label}
+          </span>
+        )}
+      </span>
+    </button>
+  );
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <SWUpdateForcer />
       <PWAOptimizer />
       <PushManager />
       <OfflineIndicator />
       <InstallPrompt />
 
+      {/* Ambient backdrop — soft purple aurora */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/3 w-[60vw] h-[60vw] rounded-full opacity-[0.08] blur-3xl"
+             style={{ background: "radial-gradient(circle, hsl(var(--signal)), transparent 65%)" }} />
+        <div className="absolute -bottom-40 -right-20 w-[50vw] h-[50vw] rounded-full opacity-[0.06] blur-3xl"
+             style={{ background: "radial-gradient(circle, hsl(210 100% 60%), transparent 65%)" }} />
+      </div>
 
-      {/* Logo and Notifications - Top */}
-      <div className="hidden md:flex fixed top-6 left-6 right-6 z-50 items-center justify-between">
-        <button onClick={() => navigate(createPageUrl("Home"))}>
-          <img 
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69455d52c9eab36b7d26cc74/d7db28e4b_LogoLIGGANDE_IMvision_VITtkopia.png" 
-            alt="IMvision"
-            className="h-8 object-contain cursor-pointer hover:opacity-80 transition-opacity"
-            loading="lazy"
-          />
-        </button>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setWithdrawalModalOpen(true)}
-            className="text-white/70 hover:text-white hover:bg-white/10"
-            title="Uttag från lager"
-          >
-            <PackageSearch className="w-5 h-5" />
-          </Button>
-          <LanguageToggle />
-          <NotificationBell />
+      {/* ========== DESKTOP TOP BAR (glass, floating) ========== */}
+      <div className="hidden md:flex fixed top-4 left-4 right-4 z-50">
+        <div className="glass-strong rounded-2xl flex items-center justify-between w-full px-4 h-14">
+          <button onClick={() => navigate(createPageUrl("Home"))} className="flex items-center gap-3">
+            <img
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69455d52c9eab36b7d26cc74/d7db28e4b_LogoLIGGANDE_IMvision_VITtkopia.png"
+              alt="IMvision"
+              className="h-6 object-contain opacity-90"
+              loading="lazy"
+            />
+          </button>
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="ghost" size="icon"
+              onClick={() => setWithdrawalOpen(true)}
+              title="Uttag från lager"
+            >
+              <PackageSearch className="w-4 h-4" />
+            </Button>
+            <LanguageToggle />
+            <NotificationBell />
+          </div>
         </div>
       </div>
 
-      {/* Desktop Navigation - Bottom */}
-      <nav className="hidden md:flex fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-zinc-800 shadow-2xl z-50 overflow-x-auto px-4">
-        <div className="flex items-center gap-2 min-w-max mx-auto relative">
+      {/* ========== DESKTOP DOCK (Tesla/Apple) ========== */}
+      <nav className="hidden md:flex fixed bottom-5 left-1/2 -translate-x-1/2 z-50">
+        <div className="glass-strong rounded-full px-2 h-14 flex items-center gap-1 shadow-card-2">
           <button
             onClick={() => {
               setNavCollapsed(!navCollapsed);
               localStorage.setItem('nav_collapsed', !navCollapsed);
             }}
-            className="absolute -left-16 w-12 h-12 rounded-xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-foreground/50 hover:text-foreground hover:bg-white/[0.06] transition-colors"
             title={navCollapsed ? "Expandera" : "Minimera"}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {navCollapsed ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              )}
-            </svg>
+            {navCollapsed
+              ? <ChevronRight className="w-4 h-4" />
+              : <ChevronLeft className="w-4 h-4" />}
           </button>
+
           {visibleNavItems.map(item => (
-            <button
+            <NavTile
               key={item.name}
-              onClick={() => handleTabClick(item.name)}
-              className={cn("flex items-center gap-2 transition-all duration-200", navCollapsed ? "flex-col" : "flex-row")}
-            >
-              <div className={cn(
-                "w-10 h-10 rounded-md flex items-center justify-center transition-all duration-200 flex-shrink-0",
-                currentPageName === item.name
-                  ? "bg-signal/10 text-signal"
-                  : "text-white/50 hover:text-white hover:bg-zinc-800"
-              )}>
-                <item.icon className="w-4 h-4" />
-              </div>
-              {!navCollapsed && (
-                <span className={cn(
-                  "text-xs font-brand whitespace-nowrap tracking-wide min-w-fit transition-colors",
-                  currentPageName === item.name
-                    ? "text-signal"
-                    : "text-white/50"
-                )}>
-                  {item.label}
-                </span>
-              )}
-            </button>
+              item={item}
+              compact={navCollapsed}
+              active={currentPageName === item.name}
+            />
           ))}
-          {/* Admin sub-items */}
+
           {!navCollapsed && (
-            <div className="flex items-center gap-1 border-l border-zinc-800 pl-2 ml-1">
-              {ADMIN_SUB_ITEMS.map(item => (
-                <button
+            <>
+              <div className="mx-1 h-7 w-px bg-white/10" />
+              {ADMIN_SUB_ITEMS.slice(0, 6).map(item => (
+                <NavTile
                   key={item.name}
-                  onClick={() => handleTabClick(item.name)}
-                  className="flex flex-col items-center gap-1"
-                >
-                  <div className={cn(
-                    "w-9 h-9 rounded-md flex items-center justify-center transition-all duration-200",
-                    currentPageName === item.name
-                      ? "bg-signal/10 text-signal"
-                      : "text-white/30 hover:text-white hover:bg-zinc-800"
-                  )}>
-                    <item.icon className="w-4 h-4" />
-                  </div>
-                  <span className={cn(
-                    "text-[10px] font-brand whitespace-nowrap tracking-wide transition-colors",
-                    currentPageName === item.name ? "text-signal" : "text-white/30"
-                  )}>
-                    {item.label}
-                  </span>
-                </button>
+                  item={item}
+                  compact
+                  active={currentPageName === item.name}
+                />
               ))}
-            </div>
+            </>
           )}
         </div>
       </nav>
 
-      {/* Mobile Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 bg-black border-b border-zinc-800 shadow-sm z-50 flex items-center justify-between px-4" style={{ paddingTop: 'env(safe-area-inset-top)', height: 'calc(4rem + env(safe-area-inset-top))' }}>
-       <div className="flex items-center gap-3">
-         {isDeepPage ? (
-           <Button
-             variant="ghost"
-             size="icon"
-             onClick={() => navigate(-1)}
-             className="text-white/70 hover:text-white -ml-2"
-           >
-             <ArrowLeft className="w-5 h-5" />
-           </Button>
-         ) : (
-           <button onClick={() => navigate(createPageUrl("Home"))}>
-             <img 
-               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69455d52c9eab36b7d26cc74/d7db28e4b_LogoLIGGANDE_IMvision_VITtkopia.png" 
-               alt="IMvision"
-               className="h-7 object-contain cursor-pointer hover:opacity-80 transition-opacity"
-               loading="lazy"
-             />
-           </button>
-         )}
-       </div>
-
+      {/* ========== MOBILE TOP BAR ========== */}
+      <header
+        className="md:hidden fixed top-0 left-0 right-0 z-50 glass-strong flex items-center justify-between px-3"
+        style={{ paddingTop: 'env(safe-area-inset-top)', height: 'calc(3.5rem + env(safe-area-inset-top))' }}
+      >
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setWithdrawalModalOpen(true)}
-            className="text-white/70 hover:text-white"
-            title="Uttag från lager"
-          >
+          {isDeepPage ? (
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          ) : (
+            <button onClick={() => navigate(createPageUrl("Home"))} className="px-1">
+              <img
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69455d52c9eab36b7d26cc74/d7db28e4b_LogoLIGGANDE_IMvision_VITtkopia.png"
+                alt="IMvision"
+                className="h-6 object-contain opacity-90"
+              />
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={() => setWithdrawalOpen(true)} title="Uttag">
             <PackageSearch className="w-5 h-5" />
           </Button>
           <LanguageToggle />
           <NotificationBell />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-white/70 hover:text-white"
-          >
+          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
         </div>
       </header>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black flex flex-col" style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top))' }}>
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {visibleNavItems.map(item => (
-              <button
-                key={item.name}
-                onClick={() => {
-                  handleTabClick(item.name);
-                  setMobileMenuOpen(false);
-                }}
-                className={cn(
-                  "w-full text-left flex items-center gap-4 px-4 py-3 rounded-md transition-colors",
-                  currentPageName === item.name
-                    ? "bg-signal/10 text-signal border-l-4 border-signal"
-                    : "text-white/70 hover:text-white hover:bg-zinc-800 border-l-4 border-transparent"
-                )}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="font-brand tracking-wide text-sm">{item.label}</span>
-              </button>
-            ))}
-            {/* Admin sub-items */}
-            <div className="pt-2 border-t border-zinc-800">
-              <p className="font-brand text-[11px] text-white/30 tracking-widest px-4 py-2">ADMIN</p>
-              {ADMIN_SUB_ITEMS.map(item => (
+      {/* ========== MOBILE FULL MENU ========== */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="md:hidden fixed inset-0 z-40 bg-background/90 backdrop-blur-2xl flex flex-col"
+            style={{ paddingTop: 'calc(3.5rem + env(safe-area-inset-top))' }}
+          >
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+              {visibleNavItems.map(item => (
                 <button
                   key={item.name}
-                  onClick={() => {
-                    handleTabClick(item.name);
-                    setMobileMenuOpen(false);
-                  }}
+                  onClick={() => { handleTabClick(item.name); setMobileMenuOpen(false); }}
                   className={cn(
-                    "w-full text-left flex items-center gap-4 px-4 py-3 rounded-md transition-colors",
+                    "w-full text-left flex items-center gap-4 px-4 h-14 rounded-2xl transition-colors",
                     currentPageName === item.name
-                      ? "bg-signal/10 text-signal border-l-4 border-signal"
-                      : "text-white/50 hover:text-white hover:bg-zinc-800 border-l-4 border-transparent"
+                      ? "bg-white/[0.07] text-foreground hairline-strong"
+                      : "text-foreground/70 hover:text-foreground hover:bg-white/[0.04]",
                   )}
                 >
                   <item.icon className="w-5 h-5" />
-                  <span className="font-brand tracking-wide text-sm">{item.label}</span>
+                  <span className="font-medium tracking-tight">{item.label}</span>
                 </button>
               ))}
-            </div>
-          </nav>
-        </div>
-      )}
+              <div className="pt-3 mt-3 border-t border-white/5">
+                <p className="text-[11px] text-foreground/40 tracking-widest uppercase px-4 py-2">Admin</p>
+                {ADMIN_SUB_ITEMS.map(item => (
+                  <button
+                    key={item.name}
+                    onClick={() => { handleTabClick(item.name); setMobileMenuOpen(false); }}
+                    className={cn(
+                      "w-full text-left flex items-center gap-4 px-4 h-12 rounded-xl transition-colors",
+                      currentPageName === item.name
+                        ? "bg-white/[0.07] text-foreground"
+                        : "text-foreground/55 hover:text-foreground hover:bg-white/[0.04]",
+                    )}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span className="text-sm tracking-tight">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-800 shadow-2xl z-50 overflow-x-auto px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)', height: 'calc(5rem + env(safe-area-inset-bottom))' }}>
-        <div className="flex items-center gap-1 min-w-max h-full">
-          {visibleNavItems.map(item => (
-            <button
+      {/* ========== MOBILE BOTTOM TAB BAR ========== */}
+      <nav
+        className="md:hidden fixed bottom-3 left-3 right-3 z-50 glass-strong rounded-full overflow-x-auto px-2 shadow-card-2"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)', height: 'calc(3.75rem + env(safe-area-inset-bottom))' }}
+      >
+        <div className="flex items-center gap-1 min-w-max h-[3.75rem]">
+          {visibleNavItems.slice(0, 6).map(item => (
+            <NavTile
               key={item.name}
-              onClick={() => handleTabClick(item.name)}
-              className={cn(
-                "flex flex-col items-center gap-1 px-3 py-2 rounded-md transition-colors",
-                currentPageName === item.name
-                  ? "text-signal"
-                  : "text-white/50"
-              )}
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-[11px] font-brand whitespace-nowrap tracking-wide">{item.label}</span>
-            </button>
+              item={item}
+              compact
+              active={currentPageName === item.name}
+            />
           ))}
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="md:pt-20 min-h-screen will-change-auto" style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top))', paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
+      {/* ========== MAIN ========== */}
+      <main
+        className="relative z-10 md:pt-24 min-h-screen"
+        style={{
+          paddingTop: 'calc(3.75rem + env(safe-area-inset-top))',
+          paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))',
+        }}
+      >
         <ErrorBoundary>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={location.pathname}
-              initial={{ x: 300, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -300, opacity: 0 }}
-              transition={{ 
-                type: "tween", 
-                duration: 0.2,
-                ease: "easeInOut"
-              }}
+              initial={{ opacity: 0, y: 12, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0,  filter: "blur(0px)" }}
+              exit   ={{ opacity: 0, y: -8, filter: "blur(6px)" }}
+              transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
             >
               {children}
             </motion.div>
@@ -417,23 +390,19 @@ function LayoutContent({ children, currentPageName }) {
 
       <QuickWithdrawalModal
         open={withdrawalModalOpen}
-        onOpenChange={setWithdrawalModalOpen}
-        onSuccess={() => {
-          // Optionally invalidate article queries so lists refresh
-          queryClientInstance.invalidateQueries({ queryKey: ['articles'] });
-        }}
+        onOpenChange={setWithdrawalOpen}
+        onSuccess={() => queryClientInstance.invalidateQueries({ queryKey: ['articles'] })}
       />
 
       <IOSInstallPrompt />
       <IOSPushPrompt />
 
-      {/* Floating Camera Button — Signal CTA */}
+      {/* Floating CTA — Scan/Camera */}
       <motion.button
         whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileTap={{ scale: 0.92 }}
         onClick={() => navigate(createPageUrl("Scan"))}
-        className="fixed bottom-28 md:bottom-24 right-6 w-14 h-14 rounded-full bg-signal hover:bg-signal-hover active:bg-signal-active text-white shadow-lg shadow-signal/30 transition-all z-40 flex items-center justify-center"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        className="fixed bottom-24 md:bottom-24 right-5 w-14 h-14 rounded-full bg-signal text-white glow-signal z-40 flex items-center justify-center"
         title="Öppna kamera"
       >
         <Camera className="w-6 h-6" />

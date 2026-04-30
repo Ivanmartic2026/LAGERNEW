@@ -9,7 +9,10 @@
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "figma:connect": "figma connect",
+    "figma:publish": "figma connect publish",
+    "figma:unpublish": "figma connect unpublish"
   },
   "dependencies": {
     "@base44/sdk": "^0.8.26",
@@ -86,6 +89,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
+    "@figma/code-connect": "^1.4.4",
     "@types/node": "^22.13.5",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
