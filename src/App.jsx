@@ -49,6 +49,7 @@ const UsersManagement = lazy(() => import('@/pages/UsersManagement'));
 const MigrationCenter = lazy(() => import('@/pages/MigrationCenter'));
 const PatternRules = lazy(() => import('@/pages/PatternRules'));
 const MatchReview = lazy(() => import('@/pages/MatchReview'));
+const Demo2026 = lazy(() => import('@/pages/Demo2026'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -149,6 +150,8 @@ function App() {
           <NavigationTracker />
           <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-black"><div className="w-8 h-8 border-4 border-zinc-700 border-t-white rounded-full animate-spin"></div></div>}>
           <Routes>
+            {/* Public design system preview - no auth, no API, no Layout */}
+            <Route path="/Demo2026" element={<Demo2026 />} />
             {/* Public order dashboard - no auth required */}
             <Route path="/OrderDashboard" element={<OrderDashboard />} />
             {/* Public supplier portal - no auth required */}
