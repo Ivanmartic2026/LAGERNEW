@@ -158,6 +158,7 @@ export default function ChatInput({ onSend, users = [], disabled = false }) {
         {/* Textarea */}
         <textarea
           ref={textareaRef}
+          data-chat-input
           value={body}
           onChange={handleChange}
           onKeyDown={handleKeyDown}

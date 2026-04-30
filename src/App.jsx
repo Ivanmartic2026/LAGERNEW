@@ -2,6 +2,9 @@ import { Toaster } from "@/components/ui/sonner"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { lazy, Suspense, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import KeyboardHelp from '@/components/KeyboardHelp';
 const VisualEditAgent = lazy(() => import('@/lib/VisualEditAgent'))
 import NavigationTracker from '@/lib/NavigationTracker'
 import { runMigrationsOnce } from '@/lib/initializeMigrations'
@@ -55,6 +58,19 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+function GlobalKeyboardShortcuts() {
+  const navigate = useNavigate();
+  useKeyboardShortcuts({
+    navigate,
+    onShowHelp: () => window.dispatchEvent(new CustomEvent('show-keyboard-help')),
+    onFocusChat: () => {
+      const input = document.querySelector('[data-chat-input]');
+      input?.focus();
+    },
+  });
+  return null;
+}
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = useLocation();
@@ -92,6 +108,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-black"><div className="w-8 h-8 border-4 border-zinc-700 border-t-white rounded-full animate-spin"></div></div>}>
+      <GlobalKeyboardShortcuts />
       <Routes>
         <Route path="/" element={
           <LayoutWrapper currentPageName={mainPageKey}>
@@ -293,6 +310,7 @@ function App() {
               },
             }}
           />
+          <KeyboardHelp />
           <Suspense fallback={null}><VisualEditAgent /></Suspense>
         </AuthProvider>
       </Router>

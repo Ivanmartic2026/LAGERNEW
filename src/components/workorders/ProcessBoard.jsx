@@ -7,6 +7,7 @@ import {
   PackageOpen, ChevronRight, CircleDot, Bell,
   Search,
 } from 'lucide-react';
+import SavedViewPicker from './SavedViewPicker';
 import { format } from 'date-fns';
 import { sv } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -480,6 +481,13 @@ export default function ProcessBoard({ columns = {}, totals = {}, isLoading }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
 
+  const currentFilters = { searchQuery, activeFilter };
+
+  const handleApplyView = (filters) => {
+    setSearchQuery(filters.searchQuery || '');
+    setActiveFilter(filters.activeFilter || 'all');
+  };
+
   const allOrders = useMemo(() => {
     return Object.values(columns).flat();
   }, [columns]);
@@ -564,6 +572,7 @@ export default function ProcessBoard({ columns = {}, totals = {}, isLoading }) {
           >
             🔴 Försenade ({totals.overdue})
           </button>
+          <SavedViewPicker currentFilters={currentFilters} onApplyView={handleApplyView} />
         </div>
       </div>
 

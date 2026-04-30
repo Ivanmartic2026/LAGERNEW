@@ -23,6 +23,7 @@ import { getPurchaseNeeds } from '../functions/getPurchaseNeeds.js';
 import { getBoard } from '../functions/getBoard.js';
 import { getGateChecklist } from '../functions/getGateChecklist.js';
 import { toggleGateItem } from '../functions/toggleGateItem.js';
+import { listSavedViews, createSavedView, deleteSavedView } from '../functions/savedViews.js';
 
 const router = Router();
 
@@ -59,5 +60,10 @@ router.post('/:functionName', (req, res, next) => {
 
   return handler(req, res, next);
 });
+
+// ── Saved Board Views (REST-style) ──
+router.get('/savedViews', listSavedViews);
+router.post('/savedViews', createSavedView);
+router.delete('/savedViews/:id', deleteSavedView);
 
 export { router as functionsRouter };
