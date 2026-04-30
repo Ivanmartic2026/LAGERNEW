@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inköp till Projekt — Designförslag</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #e5e5e5;
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { color: #888; margin-bottom: 40px; font-size: 1.05rem; }
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #333;
+    }
+    h3 { font-size: 1.1rem; font-weight: 600; margin: 28px 0 12px; color: #ccc; }
+    h4 { font-size: 0.95rem; font-weight: 600; margin: 20px 0 8px; color: #aaa; }
+    p { margin-bottom: 12px; color: #bbb; }
+    code {
+      background: #1a1a1a;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'SF Mono', monospace;
+      font-size: 0.9em;
+      color: #e8c97a;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+    .badge-red { background: #3d1f1f; color: #ff6b6b; }
+    .badge-orange { background: #3d2a1f; color: #ffa94d; }
+    .badge-yellow { background: #3d351f; color: #ffd43b; }
+    .badge-green { background: #1f3d1f; color: #69db7c; }
+    .badge-blue { background: #1f2a3d; color: #74c0fc; }
+    .badge-gray { background: #2a2a2a; color: #999; }
+
+    /* Flow diagram */
+    .flow-diagram {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 32px;
+      margin: 20px 0;
+    }
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 12px 0;
+      padding: 14px 18px;
+      background: #1a1a1a;
+      border-radius: 12px;
+      border: 1px solid #2a2a2a;
+    }
+    .flow-step-number {
+      width: 32px; height: 32px;
+      background: #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .flow-arrow {
+      text-align: center;
+      color: #555;
+      font-size: 1.5rem;
+      margin: 4px 0;
+    }
+    .flow-box {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 16px 0;
+    }
+    .flow-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: #222;
+      border-radius: 8px;
+      margin: 6px 0;
+      font-size: 0.9rem;
+    }
+    .flow-status-arrow { color: #555; margin: 0 8px; }
+    .flow-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .flow-btn {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      border: 1px solid #444;
+      background: #222;
+      color: #aaa;
+    }
+
+    /* UI Mockup */
+    .mockup-frame {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 24px;
+      margin: 20px 0;
+    }
+    .mockup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .mockup-title { font-weight: 600; font-size: 1rem; }
+    .mockup-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+    }
+    .mockup-btn-primary { background: #fff; color: #000; }
+    .mockup-btn-secondary { background: #2a2a2a; color: #ccc; border: 1px solid #444; }
+
+    /* Summary cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .summary-number { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+    .summary-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Material rows */
+    .material-group { margin-bottom: 16px; }
+    .material-group-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .material-row {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 10px;
+    }
+    .material-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .material-name { font-weight: 600; font-size: 0.95rem; }
+    .material-sku { color: #666; font-size: 0.8rem; margin-left: 8px; }
+    .material-meta {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .material-meta-item { font-size: 0.85rem; }
+    .material-meta-label { color: #666; font-size: 0.75rem; margin-bottom: 2px; }
+    .material-meta-value { font-weight: 500; }
+    .material-meta-value.missing { color: #ff6b6b; font-weight: 700; }
+    .material-meta-value.stock { color: #69db7c; }
+    .material-meta-value.ordered { color: #74c0fc; }
+    .material-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Blocking indicator */
+    .blocker-bar {
+      background: #3d1f1f;
+      border: 1px solid #5a2a2a;
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .blocker-icon { font-size: 1.2rem; }
+    .blocker-text { font-size: 0.9rem; }
+    .blocker-text strong { color: #ff6b6b; }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.9rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    th {
+      color: #888;
+      font-weight: 500;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    tr:hover td { background: #1a1a1a; }
+
+    /* Dashboard cards */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .dashboard-card {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .dashboard-card h4 { margin-top: 0; }
+    .dashboard-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #222;
+    }
+    .dashboard-item:last-child { border-bottom: none; }
+    .dashboard-count {
+      width: 28px; height: 28px;
+      background: #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Phase boxes */
+    .phase-box {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 24px;
+      margin: 20px 0;
+    }
+    .phase-box h4 { margin-top: 0; color: #fff; }
+    .phase-list { margin: 0; padding-left: 20px; }
+    .phase-list li { margin: 8px 0; color: #bbb; }
+    .phase-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .phase-tag-green { background: #1f3d1f; color: #69db7c; }
+    .phase-tag-red { background: #3d1f1f; color: #ff6b6b; }
+
+    .note {
+      background: #1a1a1a;
+      border-left: 3px solid #555;
+      padding: 12px 16px;
+      margin: 16px 0;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9rem;
+      color: #999;
+    }
+
+    .enum-box {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 12px 0;
+    }
+    .enum-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      font-family: 'SF Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 640px) {
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .material-meta { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛒 Inköp till Projekt</h1>
+    <p class="subtitle">Work Order Purchasing Redesign — Designförslag</p>
+
+    <!-- ============================================ -->
+    <!-- 1. PURCHASING FLOW -->
+    <!-- ============================================ -->
+    <h2>1. Inköpsflöde</h2>
+
+    <div class="flow-diagram">
+      <div class="flow-step">
+        <div class="flow-step-number">1</div>
+        <div>
+          <strong>Materialbehov identifieras</strong>
+          <div style="color:#888;font-size:0.85rem">Från Work Order material-lista, order-krav, eller manuell inmatning</div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <div class="flow-step-number">2</div>
+        <div>
+          <strong>System beräknar tillgänglighet</strong>
+          <div style="color:#888;font-size:0.85rem">Behov − Lager − Reserverat = Saknas</div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <div class="flow-step-number">3</div>
+        <div>
+          <strong>Inköpsbehov skapas</strong>
+          <span class="badge badge-red">purchase_needed</span>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-box">
+        <h4 style="margin-top:0;margin-bottom:16px">Inköpsbehovets livscykel</h4>
+
+        <div class="flow-status">
+          <span class="badge badge-red">purchase_needed</span>
+          <span class="flow-status-arrow">→</span>
+          <span class="flow-btn">Begär offert</span>
+          <span class="flow-status-arrow">→</span>
+          <span class="badge badge-yellow">quote_requested</span>
+        </div>
+
+        <div class="flow-status">
+          <span class="badge badge-yellow">quote_requested</span>
+          <span class="flow-status-arrow">→</span>
+          <span class="badge badge-blue">quote_received</span>
+          <span class="flow-status-arrow">→</span>
+          <span class="flow-btn">Godkänn offert</span>
+          <span class="flow-status-arrow">→</span>
+          <span class="badge badge-blue">ordered</span>
+        </div>
+
+        <div class="flow-status">
+          <span class="badge badge-blue">ordered</span>
+          <span class="flow-status-arrow">→</span>
+          <span class="badge badge-orange">partially_received</span>
+          <span class="flow-status-arrow">→</span>
+          <span class="flow-btn">Markera mottagen</span>
+          <span class="flow-status-arrow">→</span>
+          <span class="badge badge-green">received</span>
+        </div>
+
+        <div class="flow-status">
+          <span class="badge badge-blue">ordered</span>
+          <span class="flow-status-arrow">→</span>
+          <span class="badge badge-red">delayed</span>
+          <span class="flow-status-arrow">→</span>
+          <span class="flow-btn">Uppdatera datum</span>
+          <span class="flow-status-arrow">→</span>
+          <span class="badge badge-blue">ordered</span>
+        </div>
+
+        <div class="flow-status">
+          <span class="badge badge-gray">not_needed</span>
+          <span style="color:#666;margin:0 8px">eller</span>
+          <span class="badge badge-gray">cancelled</span>
+          <span style="color:#666;margin:0 8px">→ Ej blockerande</span>
+        </div>
+      </div>
+
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <div class="flow-step-number" style="background:#1f3d1f;color:#69db7c">✓</div>
+        <div>
+          <strong>Mottaget — blockerar inte längre</strong>
+          <div style="color:#888;font-size:0.85rem">Material redo för plock / produktion / montering</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 2. UI LAYOUT -->
+    <!-- ============================================ -->
+    <h2>2. UI Layout — Tab: "Material & Inköp"</h2>
+
+    <div class="mockup-frame">
+      <div class="mockup-header">
+        <div class="mockup-title">📦 Material & Inköp</div>
+        <button class="mockup-btn mockup-btn-primary">+ Nytt behov</button>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-number" style="color:#fff">8</div>
+          <div class="summary-label">Totalt</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-number" style="color:#69db7c">3</div>
+          <div class="summary-label">Klara</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-number" style="color:#74c0fc">2</div>
+          <div class="summary-label">Beställda</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-number" style="color:#ffa94d">2</div>
+          <div class="summary-label">Väntar</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-number" style="color:#ff6b6b">1</div>
+          <div class="summary-label">Saknas</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-number" style="color:#ff6b6b">1</div>
+          <div class="summary-label">Försenat</div>
+        </div>
+      </div>
+
+      <!-- Blocker bar -->
+      <div class="blocker-bar">
+        <div class="blocker-icon">🔴</div>
+        <div class="blocker-text">
+          <strong>Projektet är blockerat:</strong> 1 material saknas och 1 är försenat. Produktion kan inte påbörjas.
+        </div>
+      </div>
+
+      <!-- SAKNAS -->
+      <div class="material-group">
+        <div class="material-group-title">
+          <span>🔴</span> SAKNAS — kräver åtgärd
+        </div>
+        <div class="material-row" style="border-color:#5a2a2a">
+          <div class="material-row-header">
+            <div>
+              <span class="material-name">LED Controller</span>
+              <span class="material-sku">SKU-1023</span>
+            </div>
+            <span class="badge badge-red">purchase_needed</span>
+          </div>
+          <div class="material-meta">
+            <div class="material-meta-item">
+              <div class="material-meta-label">Behov</div>
+              <div class="material-meta-value">10 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Lager</div>
+              <div class="material-meta-value stock">4 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Saknas</div>
+              <div class="material-meta-value missing">6 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Beställt</div>
+              <div class="material-meta-value">0 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Mottaget</div>
+              <div class="material-meta-value">0 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Blockerar</div>
+              <div class="material-meta-value missing">Ja</div>
+            </div>
+          </div>
+          <div class="material-actions">
+            <button class="mockup-btn mockup-btn-secondary">Begär offert</button>
+            <button class="mockup-btn mockup-btn-primary">Skapa inköpsorder</button>
+            <button class="mockup-btn mockup-btn-secondary">Ej behövd</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BESTÄLLT -->
+      <div class="material-group">
+        <div class="material-group-title">
+          <span>🛒</span> BESTÄLLT — väntar på leverans
+        </div>
+        <div class="material-row" style="border-color:#2a3a5a">
+          <div class="material-row-header">
+            <div>
+              <span class="material-name">Strömförsörjning 24V</span>
+              <span class="material-sku">SKU-2041</span>
+            </div>
+            <span class="badge badge-blue">ordered</span>
+          </div>
+          <div class="material-meta">
+            <div class="material-meta-item">
+              <div class="material-meta-label">Behov</div>
+              <div class="material-meta-value">2 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Lager</div>
+              <div class="material-meta-value stock">1 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Saknas</div>
+              <div class="material-meta-value missing">1 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Beställt</div>
+              <div class="material-meta-value ordered">2 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Leverantör</div>
+              <div class="material-meta-value">Elgiganten AB</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">PO</div>
+              <div class="material-meta-value">PO-2024-042</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">ETA</div>
+              <div class="material-meta-value ordered">12 maj 2026</div>
+            </div>
+          </div>
+          <div class="material-actions">
+            <button class="mockup-btn mockup-btn-secondary">Uppdatera datum</button>
+            <button class="mockup-btn mockup-btn-primary">Markera mottagen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FÖRSENAT -->
+      <div class="material-group">
+        <div class="material-group-title">
+          <span>⚠️</span> FÖRSENAT
+        </div>
+        <div class="material-row" style="border-color:#5a3a1f">
+          <div class="material-row-header">
+            <div>
+              <span class="material-name">Monteringsprofil Alu 2m</span>
+              <span class="material-sku">SKU-3105</span>
+            </div>
+            <span class="badge badge-red">delayed</span>
+          </div>
+          <div class="material-meta">
+            <div class="material-meta-item">
+              <div class="material-meta-label">Behov</div>
+              <div class="material-meta-value">8 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Lager</div>
+              <div class="material-meta-value">0 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Saknas</div>
+              <div class="material-meta-value missing">8 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Beställt</div>
+              <div class="material-meta-value ordered">8 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Leverantör</div>
+              <div class="material-meta-value">ProfilAB</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">PO</div>
+              <div class="material-meta-value">PO-2024-038</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">ETA</div>
+              <div class="material-meta-value missing">5 maj (FÖRSENAD 25 dagar)</div>
+            </div>
+          </div>
+          <div class="material-actions">
+            <button class="mockup-btn mockup-btn-secondary">Nytt datum</button>
+            <button class="mockup-btn mockup-btn-primary">Markera mottagen</button>
+            <button class="mockup-btn mockup-btn-secondary">Avbeställ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KLAR -->
+      <div class="material-group">
+        <div class="material-group-title">
+          <span>✅</span> KLAR
+        </div>
+        <div class="material-row" style="border-color:#1f3d1f">
+          <div class="material-row-header">
+            <div>
+              <span class="material-name">LED-modul 500×500 RGB</span>
+              <span class="material-sku">SKU-1001</span>
+            </div>
+            <span class="badge badge-green">received</span>
+          </div>
+          <div class="material-meta">
+            <div class="material-meta-item">
+              <div class="material-meta-label">Behov</div>
+              <div class="material-meta-value">4 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Lager</div>
+              <div class="material-meta-value stock">12 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Plockat</div>
+              <div class="material-meta-value stock">4 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Mottaget</div>
+              <div class="material-meta-value stock">4 st</div>
+            </div>
+            <div class="material-meta-item">
+              <div class="material-meta-label">Blockerar</div>
+              <div class="material-meta-value stock">Nej</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 3. DATABASE MODEL -->
+    <!-- ============================================ -->
+    <h2>3. Databasmodell</h2>
+
+    <h3>3A. Befintliga fält som återanvänds</h3>
+    <table>
+      <thead>
+        <tr><th>Tabell</th><th>Fält</th><th>Användning</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>PurchaseOrder</code></td>
+          <td><code>work_order_id</code>, <code>status</code>, <code>expected_delivery_date</code></td>
+          <td>Länka inköpsorder tillbaka till Work Order</td>
+        </tr>
+        <tr>
+          <td><code>PurchaseOrderItem</code></td>
+          <td><code>article_id</code>, <code>quantity</code></td>
+          <td>Vad som beställdes</td>
+        </tr>
+        <tr>
+          <td><code>WorkOrderMaterial</code></td>
+          <td><code>article_id</code>, <code>quantity_needed</code>, <code>quantity_picked</code>, <code>quantity_ordered</code></td>
+          <td>Materialrad i Work Order</td>
+        </tr>
+        <tr>
+          <td><code>Article</code></td>
+          <td><code>stock_qty</code>, <code>supplier_id</code></td>
+          <td>Lagersaldo och leverantör</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>3B. Ny modell: PurchaseNeed</h3>
+    <div class="enum-box">
+      <div style="font-family:'SF Mono',monospace;font-size:0.85rem;margin-bottom:12px;color:#e8c97a">
+        model PurchaseNeed {
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#888">id, createdAt, updatedAt</span>
+        <span style="color:#555">— standard UUID + tidsstämplar</span>
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#74c0fc">work_order_id</span>
+        <span style="color:#555">— länk till Work Order</span>
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#74c0fc">work_order_material_id</span>
+        <span style="color:#555">— länk till materialrad (valfritt)</span>
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#74c0fc">article_id, article_name, article_sku</span>
+        <span style="color:#555">— denormaliserad artikelinfo</span>
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#ffa94d">quantity_needed, quantity_in_stock, quantity_reserved, quantity_missing</span>
+        <span style="color:#555">— beräknade mängder</span>
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#ffa94d">quantity_ordered, quantity_received</span>
+        <span style="color:#555">— spårning över alla PO</span>
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#ff6b6b">status</span>
+        <span style="color:#555">— se enum nedan</span>
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#69db7c">quote_requested_at, quote_received_at, quote_approved_at, quote_price</span>
+        <span style="color:#555">— offertfas</span>
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#69db7c">purchase_order_id, purchase_order_number</span>
+        <span style="color:#555">— länk till PO när skapad</span>
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#69db7c">supplier_name, expected_delivery_date, actual_delivery_date</span>
+        <span style="color:#555">— leveransspårning</span>
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#ff6b6b">is_blocking, blocker_reason</span>
+        <span style="color:#555">— blockeringsflagga</span>
+      </div>
+      <div class="enum-item" style="padding-left:20px">
+        <span style="color:#888">requested_by, requested_by_name, notes</span>
+        <span style="color:#555">— audit</span>
+      </div>
+    </div>
+
+    <h4>PurchaseNeedStatus enum</h4>
+    <div class="enum-box">
+      <div class="enum-item"><span class="badge badge-gray">not_needed</span> <span style="color:#555">— beslutat att inte behövas</span></div>
+      <div class="enum-item"><span class="badge badge-red">purchase_needed</span> <span style="color:#555">— identifierat som saknas</span></div>
+      <div class="enum-item"><span class="badge badge-yellow">quote_requested</span> <span style="color:#555">— offert begärd</span></div>
+      <div class="enum-item"><span class="badge badge-blue">quote_received</span> <span style="color:#555">— offert mottagen, väntar godkännande</span></div>
+      <div class="enum-item"><span class="badge badge-blue">ordered</span> <span style="color:#555">— inköpsorder skapad/skickad</span></div>
+      <div class="enum-item"><span class="badge badge-orange">partially_received</span> <span style="color:#555">— delvis mottagen</span></div>
+      <div class="enum-item"><span class="badge badge-green">received</span> <span style="color:#555">— fullständigt mottagen</span></div>
+      <div class="enum-item"><span class="badge badge-red">delayed</span> <span style="color:#555">— försenad leverans</span></div>
+      <div class="enum-item"><span class="badge badge-gray">cancelled</span> <span style="color:#555">— avbeställd</span></div>
+    </div>
+
+    <h3>3C. Nya fält på befintliga modeller</h3>
+    <div class="note">
+      <strong>PurchaseOrder:</strong> <code>quote_requested_at</code>, <code>quote_received_at</code>, <code>quote_approved_at</code>, <code>is_delayed</code>, <code>delay_reason</code><br><br>
+      <strong>PurchaseOrderItem:</strong> <code>work_order_material_id</code>, <code>purchase_need_id</code>, <code>quantity_received</code><br><br>
+      <strong>WorkOrderMaterial:</strong> <code>quantity_reserved</code>, <code>purchase_need_id</code>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 4. BLOCKING LOGIC -->
+    <!-- ============================================ -->
+    <h2>4. Blockeringslogik</h2>
+
+    <div class="flow-box">
+      <p style="margin-bottom:16px">En Work Order är <strong style="color:#ff6b6b">blockerad</strong> om:</p>
+      <ol style="padding-left:20px;color:#bbb">
+        <li style="margin:8px 0"><code>quantity_needed &gt; (quantity_in_stock + quantity_received)</code></li>
+        <li style="margin:8px 0">OCH <code>status</code> är INTE <code>received</code>, <code>not_needed</code>, eller <code>cancelled</code></li>
+      </ol>
+      <div style="margin-top:16px;padding:12px;background:#1a1a1a;border-radius:8px">
+        <code style="background:transparent;padding:0;color:#e8c97a">
+          canProceed = blockingNeeds.length === 0 || adminOverride === true
+        </code>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Status</th><th>Blockerar?</th><th>Kommentar</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="badge badge-red">purchase_needed</span></td><td style="color:#ff6b6b;font-weight:700">Ja</td><td>Inget har gjorts ännu</td></tr>
+        <tr><td><span class="badge badge-yellow">quote_requested</span></td><td style="color:#ff6b6b;font-weight:700">Ja</td><td>Väntar på offert</td></tr>
+        <tr><td><span class="badge badge-blue">quote_received</span></td><td style="color:#ff6b6b;font-weight:700">Ja</td><td>Väntar på godkännande</td></tr>
+        <tr><td><span class="badge badge-blue">ordered</span></td><td style="color:#ff6b6b;font-weight:700">Ja</td><td>Väntar på leverans</td></tr>
+        <tr><td><span class="badge badge-red">delayed</span></td><td style="color:#ff6b6b;font-weight:700">Ja</td><td>Försenad — extra blockerande</td></tr>
+        <tr><td><span class="badge badge-orange">partially_received</span></td><td style="color:#ffa94d;font-weight:700">Kanske</td><td>Om mottaget ≥ behov → nej</td></tr>
+        <tr><td><span class="badge badge-green">received</span></td><td style="color:#69db7c;font-weight:700">Nej</td><td>Fullständigt mottagen</td></tr>
+        <tr><td><span class="badge badge-gray">not_needed</span></td><td style="color:#69db7c;font-weight:700">Nej</td><td>Inte längre behövd</td></tr>
+        <tr><td><span class="badge badge-gray">cancelled</span></td><td style="color:#69db7c;font-weight:700">Nej</td><td>Avbeställd — hitta alternativ</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============================================ -->
+    <!-- 5. ACTIONS -->
+    <!-- ============================================ -->
+    <h2>5. Actions i Work Order</h2>
+
+    <table>
+      <thead>
+        <tr><th>Action</th><th>Vem</th><th>Resultat</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Skapa inköpsbehov</td><td>Projektledare / Lager</td><td><code>PurchaseNeed</code> med <code>purchase_needed</code></td></tr>
+        <tr><td>Begär offert</td><td>Inköpare</td><td>Status → <code>quote_requested</code></td></tr>
+        <tr><td>Mottag offert</td><td>Inköpare</td><td>Status → <code>quote_received</code>, ange pris</td></tr>
+        <tr><td>Godkänn offert</td><td>Projektledare</td><td>Status → <code>ordered</code>, skapa <code>PurchaseOrder</code></td></tr>
+        <tr><td>Skapa PO direkt</td><td>Inköpare</td><td>Hoppa över offertfas, status → <code>ordered</code></td></tr>
+        <tr><td>Länka befintlig PO</td><td>Inköpare</td><td>Koppla <code>PurchaseOrder</code> till behov</td></tr>
+        <tr><td>Uppdatera ETA</td><td>Inköpare</td><td>Uppdatera <code>expected_delivery_date</code></td></tr>
+        <tr><td>Markera mottagen</td><td>Lager</td><td>Uppdatera <code>quantity_received</code>, status → <code>received</code></td></tr>
+        <tr><td>Markera försenad</td><td>Inköpare / PM</td><td>Status → <code>delayed</code>, ange orsak</td></tr>
+        <tr><td>Avbeställ</td><td>Admin / PM</td><td>Status → <code>cancelled</code>, ange orsak</td></tr>
+        <tr><td>Överrid blocker</td><td>Admin</td><td>Tillåt stegavancering trots saknat material</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============================================ -->
+    <!-- 6. DASHBOARD -->
+    <!-- ============================================ -->
+    <h2>6. Dashboard / Process View</h2>
+
+    <div class="dashboard-grid">
+      <div class="dashboard-card">
+        <h4>🛒 Inköparens vy — "Min dag"</h4>
+        <div class="dashboard-item">
+          <div class="dashboard-count" style="background:#3d2a1f;color:#ffa94d">3</div>
+          <div>Offertbegäran att skicka</div>
+        </div>
+        <div class="dashboard-item">
+          <div class="dashboard-count" style="background:#3d1f1f;color:#ff6b6b">2</div>
+          <div>Försenade leveranser att följa upp</div>
+        </div>
+        <div class="dashboard-item">
+          <div class="dashboard-count" style="background:#1f2a3d;color:#74c0fc">5</div>
+          <div>Inköpsorder att skapa från behov</div>
+        </div>
+      </div>
+
+      <div class="dashboard-card">
+        <h4>🔴 Projektledarens vy — Blockerade</h4>
+        <div class="dashboard-item">
+          <div class="dashboard-count" style="background:#3d1f1f;color:#ff6b6b">1</div>
+          <div>LED-vägg Söderhallen — saknar 3 material</div>
+        </div>
+        <div class="dashboard-item">
+          <div class="dashboard-count" style="background:#5a3a1f;color:#ffa94d">1</div>
+          <div>Skylt Malmö — försenad 5 dagar</div>
+        </div>
+      </div>
+
+      <div class="dashboard-card">
+        <h4>📦 Lagervy — Mottagning</h4>
+        <div class="dashboard-item">
+          <div class="dashboard-count" style="background:#1f3d1f;color:#69db7c">4</div>
+          <div>Leveranser att boka in idag</div>
+        </div>
+        <div class="dashboard-item">
+          <div class="dashboard-count" style="background:#2a2a2a;color:#999">2</div>
+          <div>Väntar på kvittens från leverantör</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 7. IMPLEMENTATION PHASES -->
+    <!-- ============================================ -->
+    <h2>7. Implementation — Faser</h2>
+
+    <div class="phase-box">
+      <h4>Phase 1: PurchaseNeed Model + Read-Only Board <span class="phase-tag phase-tag-green">2–3 dagar</span></h4>
+      <ul class="phase-list">
+        <li>Lägg till <code>PurchaseNeed</code> + nya fält i Prisma schema</li>
+        <li>Skapa migration / db push</li>
+        <li>Endpoint: <code>GET /api/v1/workorders/:id/purchase-needs</code></li>
+        <li>Auto-beräkning: när <code>WorkOrderMaterial</code> skapas → skapa <code>PurchaseNeed</code></li>
+        <li>Ny UI-tabb "Material & Inköp" med grupperad read-only vy</li>
+        <li>Sammanfattningskort + färgkodade status-pills</li>
+      </ul>
+      <div class="note" style="margin-top:16px;border-left-color:#1f3d1f">
+        <strong>Safe:</strong> Lägger bara till data. Ändrar inget i befintligt inköps- eller lagerflöde.
+      </div>
+    </div>
+
+    <div class="phase-box">
+      <h4>Phase 2: Actions <span class="phase-tag phase-tag-green">2–3 dagar</span></h4>
+      <ul class="phase-list">
+        <li>"Skapa inköpsorder från saknade"-knapp</li>
+        <li>"Markera mottagen"-knapp (uppdaterar <code>quantity_received</code>)</li>
+        <li>"Uppdatera ETA"-knapp</li>
+        <li>"Begär offert"-flöde</li>
+        <li>Länk tillbaka till befintligt PurchaseOrder-flöde</li>
+      </ul>
+    </div>
+
+    <div class="phase-box">
+      <h4>Phase 3: Blocking Integration <span class="phase-tag phase-tag-green">1 dag</span></h4>
+      <ul class="phase-list">
+        <li>Blockerings-badge på WorkOrder-list-rader</li>
+        <li>Förhindra stegavancering om blockerad (med admin-override)</li>
+        <li>Projektledare ser förväntad försening i dashboard</li>
+      </ul>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 8. KEY PRINCIPLES -->
+    <!-- ============================================ -->
+    <h2>8. Nyckelprinciper</h2>
+
+    <div style="display:grid;gap:12px;margin:20px 0">
+      <div class="flow-step" style="margin:0">
+        <div class="flow-step-number" style="background:#1f3d1f;color:#69db7c">1</div>
+        <div><strong>Inköp är projekt-kopplat.</strong> Varje inköpsbehov tillhör ett Work Order — aldrig fristående.</div>
+      </div>
+      <div class="flow-step" style="margin:0">
+        <div class="flow-step-number" style="background:#1f3d1f;color:#69db7c">2</div>
+        <div><strong>Status är transparent.</strong> Alla ser: saknas → beställt → mottaget. Inga gömda steg.</div>
+      </div>
+      <div class="flow-step" style="margin:0">
+        <div class="flow-step-number" style="background:#1f3d1f;color:#69db7c">3</div>
+        <div><strong>Blockering är explicit.</strong> Om material saknas är jobbet blockerat — visa tydligt varför.</div>
+      </div>
+      <div class="flow-step" style="margin:0">
+        <div class="flow-step-number" style="background:#1f3d1f;color:#69db7c">4</div>
+        <div><strong>Offertfasen spåras.</strong> Inte bara PO — även begärd → mottagen → godkänd.</div>
+      </div>
+      <div class="flow-step" style="margin:0">
+        <div class="flow-step-number" style="background:#1f3d1f;color:#69db7c">5</div>
+        <div><strong>Försening är synlig.</strong> Försenade leveranser flaggas, inte göms i en lista.</div>
+      </div>
+      <div class="flow-step" style="margin:0">
+        <div class="flow-step-number" style="background:#1f3d1f;color:#69db7c">6</div>
+        <div><strong>Actions är kontextuella.</strong> Vad du kan göra beror på din roll och nuvarande status.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:48px;padding-top:24px;border-top:1px solid #333;color:#666;font-size:0.85rem">
+      Dokument: <code>docs/PURCHASING_REDESIGN.md</code> &amp; <code>docs/purchasing-redesign.html</code><br>
+      Senast uppdaterad: 2026-04-29
+    </div>
+  </div>
+</body>
+</html>

@@ -19,6 +19,7 @@ import { cancelStockWithdrawal } from '../functions/cancelStockWithdrawal.js';
 import { setupPushNotifications } from '../functions/setupPushNotifications.js';
 import { sendPushNotification } from '../functions/sendPushNotification.js';
 import { getWorkOrderMaterials } from '../functions/getWorkOrderMaterials.js';
+import { getPurchaseNeeds } from '../functions/getPurchaseNeeds.js';
 
 const router = Router();
 
@@ -36,6 +37,7 @@ const handlers = {
   setupPushNotifications,
   sendPushNotification,
   getWorkOrderMaterials,
+  getPurchaseNeeds,
 };
 
 router.post('/:functionName', (req, res, next) => {

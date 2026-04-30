@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProcessBoard UX Proposal</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0a0a;
+    color: #e5e5e5;
+    line-height: 1.6;
+    padding: 40px 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 8px; }
+  .subtitle { color: #888; margin-bottom: 32px; }
+  h2 { font-size: 1.15rem; font-weight: 600; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 1px solid #333; }
+  h3 { font-size: 0.95rem; font-weight: 600; margin: 20px 0 10px; color: #aaa; }
+  p { margin-bottom: 12px; color: #bbb; font-size: 0.9rem; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 20px 0; }
+  @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+
+  .label { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .label-before { background: #3d1f1f; color: #ff6b6b; }
+  .label-after { background: #1f3d1f; color: #69db7c; }
+
+  /* ── Mockup frame ── */
+  .mockup {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 20px;
+    overflow-x: auto;
+  }
+  .mockup-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  .tab {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  .tab-active { background: #2a2a2a; color: #fff; }
+  .tab-inactive { color: #888; }
+
+  /* ── Lane ── */
+  .lane {
+    width: 260px;
+    flex-shrink: 0;
+  }
+  .lane-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .lane-header-sky { background: #1a2f3f; border: 1px solid #2a4f6f; color: #74c0fc; }
+  .lane-header-violet { background: #1f1a3f; border: 1px solid #3f3a6f; color: #b197fc; }
+  .lane-header-amber { background: #3f2a1a; border: 1px solid #6f4a2a; color: #ffa94d; }
+  .lane-header-orange { background: #3f2a1a; border: 1px solid #6f4a2a; color: #ff922b; }
+  .lane-header-blue { background: #1a1f3f; border: 1px solid #2a3f6f; color: #74c0fc; }
+  .lane-header-purple { background: #2a1a3f; border: 1px solid #4a2a6f; color: #da77f2; }
+  .lane-header-emerald { background: #1a3f2a; border: 1px solid #2a6f4a; color: #69db7c; }
+  .lane-header-gray { background: #1a1a1a; border: 1px solid #333; color: #888; }
+  .lane-count { margin-left: auto; font-family: monospace; }
+
+  /* ── Card ── */
+  .card {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+  }
+  .card-urgent { border-color: #5a3a1a; background: #2a1a0a; }
+  .card-overdue { border-left: 3px solid #ff6b6b; }
+  .card-blocked { border-left: 3px solid #ff6b6b; }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .card-title { font-weight: 600; color: #fff; line-height: 1.3; }
+  .card-meta { font-size: 0.75rem; color: #888; margin-bottom: 10px; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-red { background: #3d1f1f; color: #ff6b6b; }
+  .badge-amber { background: #3d2a1f; color: #ffa94d; }
+  .badge-green { background: #1f3d1f; color: #69db7c; }
+  .badge-blue { background: #1f2a3d; color: #74c0fc; }
+  .badge-gray { background: #2a2a2a; color: #888; }
+
+  /* ── Action ── */
+  .action-before {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: #74c0fc;
+    margin: 8px 0;
+  }
+  .action-after {
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .action-after .action-label { font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+  .action-after .action-text { font-size: 0.8rem; color: #fff; font-weight: 500; }
+
+  /* ── Owner ── */
+  .owner-before {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 6px;
+  }
+  .owner-after {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .owner-avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #333;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; font-weight: 700; color: #aaa;
+  }
+  .owner-name { font-size: 0.8rem; color: #ccc; font-weight: 500; }
+  .owner-unassigned { font-size: 0.8rem; color: #ff6b6b; font-weight: 500; }
+
+  /* ── Material row ── */
+  .material-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #2a2a2a;
+  }
+
+  /* ── Primary lane indicator ── */
+  .primary-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #2a2a2a;
+    color: #888;
+    margin-bottom: 8px;
+  }
+  .primary-badge-active {
+    background: #1f3d1f;
+    color: #69db7c;
+  }
+
+  /* ── Empty lane ── */
+  .empty-lane {
+    text-align: center;
+    padding: 20px;
+    color: #555;
+    font-size: 0.8rem;
+  }
+  .empty-lane-icon { font-size: 1.5rem; margin-bottom: 6px; }
+
+  /* ── Lane chips ── */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 0.8rem; border: 1px solid;
+  }
+
+  /* ── Scroll container ── */
+  .lanes { display: flex; gap: 16px; }
+
+  .section { margin: 40px 0; }
+  .note {
+    background: #1a1a1a;
+    border-left: 3px solid #555;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.85rem;
+    color: #999;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>ProcessBoard UX Proposal</h1>
+  <p class="subtitle">Visual improvements before coding</p>
+
+  <!-- ============================================================ -->
+  <h2>1. Why a WorkOrder appears in multiple lanes</h2>
+  <!-- ============================================================ -->
+
+  <div class="two-col">
+    <div>
+      <span class="label label-before">Before</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        The "Nu: konstruktion" text at the bottom is too subtle. Users can't tell why the same card appears in two lanes.
+      </p>
+      <div class="mockup">
+        <div class="lanes">
+          <div class="lane">
+            <div class="lane-header lane-header-sky">
+              <span>✏️</span> Konstruktion <span class="lane-count">1</span>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">ORD-2026-001</span>
+                <span class="badge badge-green">normal</span>
+              </div>
+              <div class="card-meta">Axel Arigato · 28 apr</div>
+              <div class="owner-before">👤 —</div>
+              <div class="action-before">› Tilldela konstruktör</div>
+            </div>
+          </div>
+          <div class="lane">
+            <div class="lane-header lane-header-violet">
+              <span>📋</span> Projektledning <span class="lane-count">1</span>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">ORD-2026-001</span>
+                <span class="badge badge-green">normal</span>
+              </div>
+              <div class="card-meta">Axel Arigato · 28 apr</div>
+              <div class="owner-before">👤 —</div>
+              <div class="action-before">› Övervaka framsteg</div>
+              <div style="margin-top:8px;padding-top:8px;border-top:1px solid #2a2a2a;font-size:0.7rem;color:#666">
+                Nu: konstruktion
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <span class="label label-after">After</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        Clear "primary lane" badge + explicit reason text. User instantly understands the relationship.
+      </p>
+      <div class="mockup">
+        <div class="lanes">
+          <div class="lane">
+            <div class="lane-header lane-header-sky">
+              <span>✏️</span> Konstruktion <span class="lane-count">1</span>
+            </div>
+            <div class="card">
+              <div class="primary-badge primary-badge-active">
+                ● Aktivt ansvarsområde
+              </div>
+              <div class="card-header">
+                <span class="card-title">ORD-2026-001</span>
+                <span class="badge badge-green">normal</span>
+              </div>
+              <div class="card-meta">Axel Arigato · 28 apr</div>
+              <div class="owner-after">
+                <div class="owner-avatar">?</div>
+                <span class="owner-unassigned">Ingen tilldelad</span>
+              </div>
+              <div class="action-after">
+                <div>
+                  <div class="action-label">Nästa steg</div>
+                  <div class="action-text">Tilldela konstruktör</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="lane">
+            <div class="lane-header lane-header-violet">
+              <span>📋</span> Projektledning <span class="lane-count">1</span>
+            </div>
+            <div class="card">
+              <div class="primary-badge">
+                ○ Övervakar · nu i Konstruktion
+              </div>
+              <div class="card-header">
+                <span class="card-title">ORD-2026-001</span>
+                <span class="badge badge-green">normal</span>
+              </div>
+              <div class="card-meta">Axel Arigato · 28 apr</div>
+              <div class="owner-after">
+                <div class="owner-avatar">?</div>
+                <span class="owner-unassigned">Ingen projektledare</span>
+              </div>
+              <div class="action-after">
+                <div>
+                  <div class="action-label">Nästa steg</div>
+                  <div class="action-text">Övervaka framsteg</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Change:</strong> Add a "primary lane" badge at the top of each card.
+    <br>● <strong>Aktivt ansvarsområde</strong> = the WO's current_stage matches this lane.
+    <br>○ <strong>Övervakar · nu i [stage]</strong> = the WO appears here for oversight/secondary responsibility.
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>2. Lane ownership / responsibility</h2>
+  <!-- ============================================================ -->
+
+  <div class="two-col">
+    <div>
+      <span class="label label-before">Before</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        Owner is small gray text with a tiny icon. Easy to miss. Unassigned shows just "—".
+      </p>
+      <div class="mockup">
+        <div class="card" style="width:240px">
+          <div class="card-header">
+            <span class="card-title">ORD-2026-001</span>
+          </div>
+          <div class="card-meta">Axel Arigato</div>
+          <div class="owner-before">👤 —</div>
+          <div class="action-before">› Tilldela konstruktör</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <span class="label label-after">After</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        Avatar + name. Unassigned is red and explicit. Same pattern across all lanes.
+      </p>
+      <div class="mockup">
+        <div class="card" style="width:240px">
+          <div class="card-header">
+            <span class="card-title">ORD-2026-001</span>
+          </div>
+          <div class="card-meta">Axel Arigato</div>
+          <div class="owner-after">
+            <div class="owner-avatar" style="border:1px solid #5a2a2a">?</div>
+            <span class="owner-unassigned">Ingen konstruktör</span>
+          </div>
+          <div class="action-after">
+            <div>
+              <div class="action-label">Nästa steg</div>
+              <div class="action-text">Tilldela konstruktör</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Change:</strong> Owner gets an avatar circle with initials (or "?" if unassigned).
+    <br>Unassigned owners show in <span style="color:#ff6b6b">red</span> with the role name: "Ingen konstruktör", "Ingen projektledare".
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>3. Empty lanes</h2>
+  <!-- ============================================================ -->
+
+  <div class="two-col">
+    <div>
+      <span class="label label-before">Before</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        Empty lanes are completely hidden. Users don't know Inköp or Produktion exist.
+      </p>
+      <div class="mockup">
+        <div class="lanes">
+          <div class="lane">
+            <div class="lane-header lane-header-sky">✏️ Konstruktion <span class="lane-count">1</span></div>
+            <div class="card"><div class="card-title">ORD-2026-001</div></div>
+          </div>
+          <div class="lane">
+            <div class="lane-header lane-header-violet">📋 Projektledning <span class="lane-count">1</span></div>
+            <div class="card"><div class="card-title">ORD-2026-001</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <span class="label label-after">After</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        Empty lanes are shown collapsed/grayed with a "+0" count. Users see the full process.
+      </p>
+      <div class="mockup">
+        <div class="lanes">
+          <div class="lane">
+            <div class="lane-header lane-header-sky">✏️ Konstruktion <span class="lane-count">1</span></div>
+            <div class="card"><div class="card-title">ORD-2026-001</div></div>
+          </div>
+          <div class="lane">
+            <div class="lane-header lane-header-violet">📋 Projektledning <span class="lane-count">1</span></div>
+            <div class="card"><div class="card-title">ORD-2026-001</div></div>
+          </div>
+          <div class="lane">
+            <div class="lane-header lane-header-gray">🛒 Inköp <span class="lane-count">0</span></div>
+            <div class="empty-lane">
+              <div class="empty-lane-icon">🛒</div>
+              <div>Inget att köpa</div>
+              <div style="font-size:0.7rem;color:#666;margin-top:4px">Alla material är klara</div>
+            </div>
+          </div>
+          <div class="lane">
+            <div class="lane-header lane-header-gray">🏭 Produktion <span class="lane-count">0</span></div>
+            <div class="empty-lane">
+              <div class="empty-lane-icon">🏭</div>
+              <div>Inga order i produktion</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Change:</strong> Show ALL 7 lanes always. Empty lanes get a gray header and an empty-state message specific to that lane's purpose.
+    <br>This makes the process visible even when some stages have no work.
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>4. Next action prominence</h2>
+  <!-- ============================================================ -->
+
+  <div class="two-col">
+    <div>
+      <span class="label label-before">Before</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        Action is a small text row with a chevron. Blends in with other metadata.
+      </p>
+      <div class="mockup">
+        <div class="card" style="width:240px">
+          <div class="card-title">ORD-2026-001</div>
+          <div class="card-meta">Axel Arigato · 28 apr</div>
+          <div class="owner-before">👤 —</div>
+          <div class="action-before">› Tilldela konstruktör</div>
+          <div class="material-row">📦 0/0 material klart</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <span class="label label-after">After</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        Action is a boxed call-to-action with a label. Visually separated from metadata.
+      </p>
+      <div class="mockup">
+        <div class="card" style="width:240px">
+          <div class="card-title">ORD-2026-001</div>
+          <div class="card-meta">Axel Arigato · 28 apr</div>
+          <div class="owner-after">
+            <div class="owner-avatar">?</div>
+            <span class="owner-unassigned">Ingen konstruktör</span>
+          </div>
+          <div class="action-after">
+            <div>
+              <div class="action-label">Nästa steg</div>
+              <div class="action-text">Tilldela konstruktör</div>
+            </div>
+          </div>
+          <div class="material-row">
+            <span>📦</span> <span style="color:#555">Inga material registrerade</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Change:</strong> Wrap the next action in a distinct box with a "Nästa steg" label above it.
+    <br>This makes it the most prominent element on the card after the title.
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>5. Overdue + blockers</h2>
+  <!-- ============================================================ -->
+
+  <div class="two-col">
+    <div>
+      <span class="label label-before">Before</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        Overdue is a small colored pill. Blocker is a small text row. Both are easy to miss.
+      </p>
+      <div class="mockup">
+        <div class="card" style="width:240px">
+          <div class="card-header">
+            <span class="card-title">ORD-2026-001</span>
+            <span class="badge badge-amber">normal</span>
+          </div>
+          <div class="card-meta">Axel Arigato · <span style="color:#ff6b6b">28 apr · 2d sen</span></div>
+          <div class="owner-before">👤 —</div>
+          <div class="action-before">› Tilldela konstruktör</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:0.75rem;color:#ff6b6b;margin-top:6px">
+            ⚠️ Saknar: LED Controller
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <span class="label label-after">After</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        Overdue gets a red left border. Blocker gets its own banner with icon + reason.
+      </p>
+      <div class="mockup">
+        <div class="card card-overdue card-blocked" style="width:240px">
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <span class="badge badge-red">🔴 Försenad · 2 dagar</span>
+            <span class="badge badge-red">⚠️ Blockerad</span>
+          </div>
+          <div class="card-header">
+            <span class="card-title">ORD-2026-001</span>
+            <span class="badge badge-amber">normal</span>
+          </div>
+          <div class="card-meta">Axel Arigato · <span style="color:#ff6b6b;font-weight:600">28 apr · 2d sen</span></div>
+          <div style="background:#3d1f1f;border:1px solid #5a2a2a;border-radius:8px;padding:8px 10px;margin:8px 0">
+            <div style="font-size:0.75rem;color:#ff6b6b;font-weight:600;margin-bottom:2px">⚠️ Blockerad av inköp</div>
+            <div style="font-size:0.7rem;color:#ff6b6b/80">Saknar: LED Controller, Strömförsörjning</div>
+          </div>
+          <div class="owner-after">
+            <div class="owner-avatar">?</div>
+            <span class="owner-unassigned">Ingen konstruktör</span>
+          </div>
+          <div class="action-after">
+            <div>
+              <div class="action-label">Nästa steg</div>
+              <div class="action-text">Beställ saknat material</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Changes:</strong>
+    <br>• Overdue cards get a <strong>red left border</strong> (3px).
+    <br>• Blocked cards also get the red border + a <strong>dedicated blocker banner</strong> inside the card.
+    <br>• Deadline text is <strong>bold red</strong> when overdue.
+    <br>• Badges at the top of the card show both overdue + blocked status together.
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>6. Material / purchase status (ready for future data)</h2>
+  <!-- ============================================================ -->
+
+  <div class="two-col">
+    <div>
+      <span class="label label-before">Before</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        When counts are 0, nothing is shown. No indication that material tracking exists.
+      </p>
+      <div class="mockup">
+        <div class="card" style="width:240px">
+          <div class="card-title">ORD-2026-001</div>
+          <div class="card-meta">Axel Arigato</div>
+          <div class="action-before">› Tilldela konstruktör</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <span class="label label-after">After</span>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:12px">
+        Always shows material section. "Inga material" for 0 counts. Ready bar for >0.
+      </p>
+      <div class="mockup">
+        <div class="card" style="width:240px">
+          <div class="card-title">ORD-2026-001</div>
+          <div class="card-meta">Axel Arigato</div>
+          <div class="action-after">
+            <div>
+              <div class="action-label">Nästa steg</div>
+              <div class="action-text">Tilldela konstruktör</div>
+            </div>
+          </div>
+          <div class="material-row">
+            <span>📦</span>
+            <span style="color:#555">Inga material registrerade</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p>When material data exists (after migration), the same section shows:</p>
+
+  <div class="mockup" style="max-width:280px">
+    <div class="card">
+      <div class="card-title">ORD-2026-002</div>
+      <div class="card-meta">Nike Stockholm</div>
+      <div class="material-row" style="display:block">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="color:#888">📦 Material</span>
+          <span style="color:#ff6b6b;font-weight:600">3/8 klart</span>
+        </div>
+        <div style="height:4px;background:#2a2a2a;border-radius:2px;overflow:hidden">
+          <div style="width:37.5%;height:100%;background:#ff6b6b;border-radius:2px"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge badge-red">🔴 3 saknas</span>
+          <span class="badge badge-blue">🛒 2 beställda</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Changes:</strong>
+    <br>• Always show the material section (even when 0).
+    <br>• When 0: gray text "Inga material registrerade".
+    <br>• When >0: mini progress bar + "X/Y klart" + pills for missing/ordered/received.
+    <br>• On the <strong>Inköp lane</strong> specifically: always show material summary prominently.
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>Summary of all changes</h2>
+  <!-- ============================================================ -->
+
+  <table style="width:100%;border-collapse:collapse;font-size:0.85rem;margin:16px 0">
+    <thead>
+      <tr style="border-bottom:1px solid #333">
+        <th style="text-align:left;padding:8px;color:#888;font-weight:500">#</th>
+        <th style="text-align:left;padding:8px;color:#888;font-weight:500">Area</th>
+        <th style="text-align:left;padding:8px;color:#888;font-weight:500">Change</th>
+        <th style="text-align:left;padding:8px;color:#888;font-weight:500">Impact</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #222">
+        <td style="padding:8px">1</td>
+        <td style="padding:8px">Multi-lane clarity</td>
+        <td style="padding:8px">"Primary lane" badge at card top</td>
+        <td style="padding:8px">Users understand why WO appears in 2+ lanes</td>
+      </tr>
+      <tr style="border-bottom:1px solid #222">
+        <td style="padding:8px">2</td>
+        <td style="padding:8px">Ownership</td>
+        <td style="padding:8px">Avatar + name, red for unassigned</td>
+        <td style="padding:8px">Clear who is responsible per lane</td>
+      </tr>
+      <tr style="border-bottom:1px solid #222">
+        <td style="padding:8px">3</td>
+        <td style="padding:8px">Empty lanes</td>
+        <td style="padding:8px">Show all 7 lanes, grayed when empty</td>
+        <td style="padding:8px">Full process visible, no hidden stages</td>
+      </tr>
+      <tr style="border-bottom:1px solid #222">
+        <td style="padding:8px">4</td>
+        <td style="padding:8px">Next action</td>
+        <td style="padding:8px">Boxed CTA with "Nästa steg" label</td>
+        <td style="padding:8px">Action is the most prominent element</td>
+      </tr>
+      <tr style="border-bottom:1px solid #222">
+        <td style="padding:8px">5</td>
+        <td style="padding:8px">Overdue / blockers</td>
+        <td style="padding:8px">Red border + blocker banner + bold badges</td>
+        <td style="padding:8px">Impossible to miss urgent issues</td>
+      </tr>
+      <tr style="border-bottom:1px solid #222">
+        <td style="padding:8px">6</td>
+        <td style="padding:8px">Material status</td>
+        <td style="padding:8px">Always show section, mini bar when >0</td>
+        <td style="padding:8px">Ready for migration, shows 0 state clearly</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>No schema changes.</strong> <strong>No data changes.</strong> All changes are in <code>ProcessBoard.jsx</code> only.
+  </div>
+
+</div>
+</body>
+</html>

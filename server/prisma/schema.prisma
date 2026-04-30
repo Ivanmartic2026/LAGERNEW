@@ -673,6 +673,18 @@ enum WorkOrderMaterialStatus {
   not_needed
 }
 
+enum PurchaseNeedStatus {
+  not_needed
+  purchase_needed
+  quote_requested
+  quote_received
+  ordered
+  partially_received
+  received
+  delayed
+  cancelled
+}
+
 // ─── Stock Withdrawal ─────────────────────────────────────────────
 
 enum StockWithdrawalType {
@@ -1350,6 +1362,19 @@ model PurchaseOrder {
   // NEW: Link back to Work Order and specific material line
   work_order_id             String?
   work_order_material_id    String?
+
+  // NEW: Quote tracking
+  quote_requested_at        DateTime?
+  quote_received_at         DateTime?
+  quote_approved_at         DateTime?
+  quote_approved_by         String?
+  quote_price               Float?
+  quote_currency            String   @default("SEK")
+
+  // NEW: Delay tracking
+  is_delayed                Boolean  @default(false)
+  delay_reason              String?
+  delay_notified_at         DateTime?
 }
 
 model PurchaseOrderItem {
@@ -1371,6 +1396,10 @@ model PurchaseOrderItem {
   supplier_comment       String? // Kommentar från leverantör
   warranty_period_months Float? // Garantitid i månader (anges av leverantör)
   source_created_by_po   Boolean                 @default(false) // Om artikeln skapades automatiskt av denna PO-rad
+
+  // NEW: Link back to Work Order material and purchase need
+  work_order_material_id String?
+  purchase_need_id       String?
 }
 
 model ReceivingRecord {
@@ -1766,6 +1795,7 @@ model WorkOrderMaterial {
   quantity_picked       Float    @default(0)
   quantity_ordered      Float    @default(0)
   quantity_received     Float    @default(0)
+  quantity_reserved     Float    @default(0)
   stock_qty_at_check    Float?
 
   status                WorkOrderMaterialStatus @default(not_checked)
@@ -1780,6 +1810,55 @@ model WorkOrderMaterial {
   picked_at             DateTime?
 
   stock_withdrawal_id   String?
+
+  // NEW: Link to purchase need
+  purchase_need_id      String?
+}
+
+model PurchaseNeed {
+  id                      String   @id @default(uuid())
+  createdAt               DateTime @default(now()) @map("created_date")
+  updatedAt               DateTime @updatedAt @map("updated_date")
+
+  work_order_id           String
+  work_order_material_id  String?
+  order_id                String?
+
+  article_id              String?
+  article_name            String
+  article_sku             String?
+
+  quantity_needed         Float
+  quantity_in_stock       Float?
+  quantity_reserved       Float    @default(0)
+  quantity_missing        Float
+  quantity_ordered        Float    @default(0)
+  quantity_received       Float    @default(0)
+
+  status                  PurchaseNeedStatus @default(purchase_needed)
+
+  quote_requested_at      DateTime?
+  quote_received_at       DateTime?
+  quote_approved_at       DateTime?
+  quote_approved_by       String?
+  quote_supplier_id       String?
+  quote_price             Float?
+  quote_currency          String   @default("SEK")
+
+  purchase_order_id       String?
+  purchase_order_number   String?
+
+  supplier_name           String?
+  expected_delivery_date  DateTime?
+  actual_delivery_date    DateTime?
+
+  is_blocking             Boolean  @default(true)
+  blocker_reason          String?
+
+  requested_by            String?
+  requested_by_name       String?
+
+  notes                   String?
 }
 
 model WorkOrderActivity {

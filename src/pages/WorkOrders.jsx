@@ -22,6 +22,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RowActionsDropdown, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/row-actions";
 import QuickWithdrawalModal from "@/components/inventory/QuickWithdrawalModal";
+import ProcessBoard from "@/components/workorders/ProcessBoard";
 
 const STAGE_META = {
   konstruktion: { label: 'Konstruktion',   accent: 'sky',     icon: Pencil,     cta: 'Fortsätt',  ctaColor: 'bg-sky-600/20 text-sky-400 hover:bg-sky-600/30 border-sky-500/30' },
@@ -223,7 +224,7 @@ function CompletedRow({ wo, onDelete }) {
 
 export default function WorkOrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('active');
+  const [activeTab, setActiveTab] = useState('process');
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState(null);
@@ -322,8 +323,11 @@ export default function WorkOrdersPage() {
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
             <TabsList className="bg-white/5 border border-white/10 h-10">
+              <TabsTrigger value="process" className="text-xs data-[state=active]:bg-white/10">
+                Process
+              </TabsTrigger>
               <TabsTrigger value="active" className="text-xs data-[state=active]:bg-white/10">
-                Aktiva
+                Lista
                 {totalActive > 0 && <span className="ml-1.5 text-[10px] text-white/40">{totalActive}</span>}
               </TabsTrigger>
               <TabsTrigger value="completed" className="text-xs data-[state=active]:bg-white/10">
@@ -351,7 +355,20 @@ export default function WorkOrdersPage() {
           </div>
         ) : (
           <AnimatePresence mode="wait">
-            {activeTab === 'active' ? (
+            {activeTab === 'process' ? (
+              <motion.div
+                key="process"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <ProcessBoard
+                  workOrders={workOrders}
+                  searchQuery={searchQuery}
+                  unreadByWO={unreadByWO}
+                />
+              </motion.div>
+            ) : activeTab === 'active' ? (
               <motion.div
                 key="active"
                 initial={{ opacity: 0 }}
