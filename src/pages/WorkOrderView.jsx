@@ -13,6 +13,7 @@ import ProcessFlow from "@/components/workorders/ProcessFlow";
 import CriticalNotesBanner from "@/components/workorders/CriticalNotesBanner";
 import RoleAssignmentBar from "@/components/workorders/RoleAssignmentBar";
 import ActivityLogPanel from "@/components/workorders/ActivityLogPanel";
+import PhaseTransitionCTA from "@/components/workorders/PhaseTransitionCTA";
 
 // Tab components
 import OverviewTab from "@/components/workorders/tabs/OverviewTab";
@@ -160,6 +161,18 @@ export default function WorkOrderViewPage() {
 
           {/* Process Flow */}
           <ProcessFlow workOrder={workOrder} />
+
+          {/* Phase Transition CTA */}
+          <div className="flex justify-end">
+            <PhaseTransitionCTA
+              workOrder={workOrder}
+              currentPhase={workOrder.current_stage}
+              onTransition={() => {
+                queryClient.invalidateQueries({ queryKey: ['workOrder', workOrderId] });
+                queryClient.invalidateQueries({ queryKey: ['board'] });
+              }}
+            />
+          </div>
 
           {/* Tabs */}
           <div className="bg-white/[0.03] rounded-xl border border-white/10 overflow-hidden">

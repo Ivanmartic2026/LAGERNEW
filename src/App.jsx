@@ -31,6 +31,7 @@ const KilometerErsattning = lazy(() => import('@/pages/KilometerErsattning'));
 const OrderDashboard = lazy(() => import('@/pages/OrderDashboard'));
 const WorkOrders = lazy(() => import('@/pages/WorkOrders'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const MyWork = lazy(() => import('@/pages/MyWork'));
 const PrintWorkOrder = lazy(() => import('@/pages/PrintWorkOrder'));
 const PrintPickList = lazy(() => import('@/pages/PrintPickList'));
 const PrintDeliveryNote = lazy(() => import('@/pages/PrintDeliveryNote'));
@@ -236,6 +237,12 @@ function App() {
             <Route path="/Dashboard" element={
               <LayoutWrapper currentPageName="Dashboard">
                 <Dashboard />
+              </LayoutWrapper>
+            } />
+            {/* Min dag / My Work */}
+            <Route path="/MyWork" element={
+              <LayoutWrapper currentPageName="MyWork">
+                <MyWork />
               </LayoutWrapper>
             } />
             {/* Work Orders List */}
