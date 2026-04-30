@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { sv } from 'date-fns/locale';
-import { Paperclip, FileText, Image as ImageIcon } from 'lucide-react';
+import { FileText, MessageCircle, Smile } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ROLE_COLORS = {
@@ -14,6 +14,8 @@ const ROLE_COLORS = {
   tekniker:     'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
   projektledare:'bg-pink-500/20 text-pink-300 border-pink-500/30',
 };
+
+const REACTION_EMOJIS = ['👍', '👀', '❓'];
 
 function RoleBadge({ role }) {
   const classes = ROLE_COLORS[role?.toLowerCase()] || 'bg-white/10 text-white/60 border-white/20';
@@ -43,7 +45,6 @@ function AttachmentPreview({ att }) {
 }
 
 function renderBody(body) {
-  // Highlight @mentions
   const parts = body.split(/(@\S+)/g);
   return parts.map((part, i) =>
     part.startsWith('@')
@@ -52,10 +53,17 @@ function renderBody(body) {
   );
 }
 
-export default function ChatMessageItem({ message, isOwn, readers = [] }) {
+export default function ChatMessageItem({ message, isOwn, readers = [], onReply, onReact, currentUserEmail }) {
   const time = message.created_date
     ? formatDistanceToNow(new Date(message.created_date), { addSuffix: true, locale: sv })
     : '';
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+
+  const reactions = message.reactions || {};
+  const userReacted = (emoji) => {
+    const users = reactions[emoji] || [];
+    return users.includes(currentUserEmail);
+  };
 
   if (message.deleted) {
     return (
@@ -84,6 +92,16 @@ export default function ChatMessageItem({ message, isOwn, readers = [] }) {
           {message.edited && <span className="text-[10px] text-white/20">(redigerad)</span>}
         </div>
 
+        {/* Reply reference */}
+        {message.parent_id && (
+          <div className={cn(
+            'text-[11px] text-white/30 bg-white/5 border-l-2 border-white/10 px-2 py-1 rounded mb-1 max-w-xs truncate',
+            isOwn && 'border-r-2 border-l-0'
+          )}>
+            Svar på tidigare meddelande
+          </div>
+        )}
+
         {/* Bubble */}
         <div className={cn(
           'rounded-2xl px-3 py-2 text-sm leading-relaxed',
@@ -98,6 +116,69 @@ export default function ChatMessageItem({ message, isOwn, readers = [] }) {
         {(message.attachments || []).map((att, i) => (
           <AttachmentPreview key={i} att={att} />
         ))}
+
+        {/* Reactions */}
+        {Object.keys(reactions).length > 0 && (
+          <div className={cn('flex flex-wrap gap-1 mt-1.5', isOwn && 'flex-row-reverse')}>
+            {Object.entries(reactions).map(([emoji, users]) => (
+              <button
+                key={emoji}
+                onClick={() => onReact?.(message.id, emoji)}
+                className={cn(
+                  'inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full border transition-colors',
+                  userReacted(emoji)
+                    ? 'bg-signal/20 border-signal/30 text-signal'
+                    : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
+                )}
+              >
+                <span>{emoji}</span>
+                <span className="text-[10px]">{users.length}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Actions bar */}
+        <div className={cn(
+          'flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity',
+          isOwn && 'flex-row-reverse'
+        )}>
+          {/* Reply */}
+          <button
+            onClick={() => onReply?.(message)}
+            className="p-1 rounded hover:bg-white/10 text-white/30 hover:text-white/60 transition-colors"
+            title="Svara"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Reaction picker */}
+          <div className="relative">
+            <button
+              onClick={() => setShowReactionPicker(!showReactionPicker)}
+              className="p-1 rounded hover:bg-white/10 text-white/30 hover:text-white/60 transition-colors"
+              title="Reagera"
+            >
+              <Smile className="w-3.5 h-3.5" />
+            </button>
+            {showReactionPicker && (
+              <div className="absolute bottom-full mb-1 left-0 bg-black border border-white/10 rounded-lg shadow-xl p-1 flex gap-0.5 z-10">
+                {REACTION_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => {
+                      onReact?.(message.id, emoji);
+                      setShowReactionPicker(false);
+                    }}
+                    className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 text-lg"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Read receipts */}
         {readers.length > 0 && (

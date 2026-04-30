@@ -2072,3 +2072,38 @@ model StockWithdrawalItem {
   stock_before          Float?
   stock_after           Float?
 }
+
+model ChatMessage {
+  id              String   @id @default(uuid())
+  createdAt       DateTime @default(now()) @map("created_date")
+  updatedAt       DateTime @updatedAt @map("updated_date")
+
+  work_order_id   String
+  body            String
+  author_email    String
+  author_name     String?
+  author_role     String?
+  thread_type     String   @default("general")
+  parent_id       String?
+  mentions        String[]
+  attachments     Json?    // [{ url, filename, mime_type }]
+  reactions       Json     @default("{}") // { "👍": ["user1", "user2"] }
+  edited          Boolean  @default(false)
+  deleted         Boolean  @default(false)
+
+  @@index([work_order_id, createdAt])
+  @@index([author_email])
+}
+
+model ChatRead {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now()) @map("created_date")
+
+  message_id    String
+  work_order_id String
+  user_email    String
+  read_at       DateTime @default(now())
+
+  @@unique([message_id, user_email])
+  @@index([work_order_id, user_email])
+}

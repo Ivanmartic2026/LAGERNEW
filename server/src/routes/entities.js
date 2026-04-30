@@ -29,6 +29,7 @@ const VALID_ENTITIES = new Set([
   'StockAdjustment', 'Supplier', 'SupplierLabelPattern', 'SyncLog',
   'SystemAutomation', 'Task', 'TaskTemplate', 'User', 'Warehouse',
   'WorkOrder', 'WorkOrderActivity', 'WorkOrderMaterial',
+  'ChatMessage', 'ChatRead',
 ]);
 
 function validateEntity(req, res, next) {

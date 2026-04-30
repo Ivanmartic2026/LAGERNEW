@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { MessageSquare, Loader2, Bell, BellOff } from 'lucide-react';
+import { MessageSquare, Loader2 } from 'lucide-react';
 import ChatMessageItem from './ChatMessageItem';
 import ChatInput from './ChatInput';
 
@@ -12,6 +12,7 @@ export default function ChatPanel({ workOrder, currentUser }) {
   const queryClient = useQueryClient();
   const messagesEndRef = useRef(null);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [replyTo, setReplyTo] = useState(null);
 
   // Fetch all users for @mention autocomplete
   const { data: allUsers = [] } = useQuery({
@@ -100,9 +101,34 @@ export default function ChatPanel({ workOrder, currentUser }) {
     }
   }
 
+  // Toggle reaction mutation
+  const reactMutation = useMutation({
+    mutationFn: async ({ messageId, emoji }) => {
+      const msg = messages.find((m) => m.id === messageId);
+      if (!msg) return;
+      const reactions = msg.reactions || {};
+      const users = reactions[emoji] || [];
+      const idx = users.indexOf(currentUser.email);
+      if (idx >= 0) {
+        users.splice(idx, 1);
+      } else {
+        users.push(currentUser.email);
+      }
+      reactions[emoji] = users;
+      // Remove empty reactions
+      for (const key of Object.keys(reactions)) {
+        if (reactions[key].length === 0) delete reactions[key];
+      }
+      return base44.entities.ChatMessage.update(messageId, { reactions });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chatMessages', workOrderId] });
+    },
+  });
+
   // Send message mutation
   const sendMutation = useMutation({
-    mutationFn: async ({ body, attachments, mentions }) => {
+    mutationFn: async ({ body, attachments, mentions, parentId }) => {
       const msg = await base44.entities.ChatMessage.create({
         work_order_id: workOrderId,
         thread_type: 'general',
@@ -112,7 +138,8 @@ export default function ChatPanel({ workOrder, currentUser }) {
         author_role: currentUser.role || 'user',
         body,
         attachments: attachments || [],
-        mentions: mentions || []
+        mentions: mentions || [],
+        parent_id: parentId || null,
       });
 
       // Trigger push notifications for mentions
@@ -133,12 +160,21 @@ export default function ChatPanel({ workOrder, currentUser }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chatMessages', workOrderId] });
       setAutoScroll(true);
+      setReplyTo(null);
     }
   });
 
   const handleSend = ({ body, attachments, mentions }) => {
     if (!currentUser) return;
-    sendMutation.mutate({ body, attachments, mentions });
+    sendMutation.mutate({ body, attachments, mentions, parentId: replyTo?.id });
+  };
+
+  const handleReply = (message) => {
+    setReplyTo(message);
+  };
+
+  const handleReact = (messageId, emoji) => {
+    reactMutation.mutate({ messageId, emoji });
   };
 
   // Filter relevant users (those tied to this WO)
@@ -198,6 +234,9 @@ export default function ChatPanel({ workOrder, currentUser }) {
                 message={msg}
                 isOwn={msg.author_email === currentUser?.email}
                 readers={readersByMessage[msg.id] || []}
+                onReply={handleReply}
+                onReact={handleReact}
+                currentUserEmail={currentUser?.email}
               />
             ))
         )}
@@ -206,10 +245,24 @@ export default function ChatPanel({ workOrder, currentUser }) {
 
       {/* Input */}
       <div className="px-3 pb-3 pt-2 border-t border-white/8">
+        {replyTo && (
+          <div className="px-3 pt-2 flex items-center justify-between bg-white/5">
+            <span className="text-[11px] text-white/40 truncate">
+              Svarar på: <span className="text-white/60">{replyTo.body.slice(0, 60)}{replyTo.body.length > 60 ? '...' : ''}</span>
+            </span>
+            <button
+              onClick={() => setReplyTo(null)}
+              className="text-[11px] text-white/30 hover:text-white/60 px-2 py-1"
+            >
+              Avbryt
+            </button>
+          </div>
+        )}
         <ChatInput
           onSend={handleSend}
           users={mentionUsers}
           disabled={sendMutation.isPending || !currentUser}
+          replyTo={replyTo}
         />
         {sendMutation.isPending && (
           <p className="text-[10px] text-white/30 mt-1 pl-1">Skickar...</p>
