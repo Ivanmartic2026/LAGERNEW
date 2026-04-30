@@ -24,6 +24,7 @@ import { getBoard } from '../functions/getBoard.js';
 import { getGateChecklist } from '../functions/getGateChecklist.js';
 import { toggleGateItem } from '../functions/toggleGateItem.js';
 import { listSavedViews, createSavedView, deleteSavedView } from '../functions/savedViews.js';
+import { updateWorkOrderMaterial } from '../functions/updateWorkOrderMaterial.js';
 
 const router = Router();
 
@@ -45,6 +46,7 @@ const handlers = {
   getBoard,
   getGateChecklist,
   toggleGateItem,
+  updateWorkOrderMaterial,
 };
 
 router.post('/:functionName', (req, res, next) => {

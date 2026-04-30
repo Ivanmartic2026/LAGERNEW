@@ -10,11 +10,14 @@ export async function evaluateGates(workOrderId, phase) {
     where: { id: workOrderId },
     include: {
       roles: true,
-      materials: true,
     },
   });
 
   if (!workOrder) throw new Error('WorkOrder not found');
+
+  const materials = await prisma.workOrderMaterial.findMany({
+    where: { work_order_id: workOrderId },
+  });
 
   const templates = await prisma.gateChecklistTemplate.findMany({
     where: { phase, active: true },
@@ -36,7 +39,7 @@ export async function evaluateGates(workOrderId, phase) {
     // Auto-evaluate if needed
     let status = item?.status || 'auto_pending';
     if (tmpl.auto_evaluated) {
-      const isMet = await evaluateAutoRule(tmpl.key, workOrder);
+      const isMet = await evaluateAutoRule(tmpl.key, workOrder, materials);
       status = isMet ? 'auto_ok' : 'auto_pending';
     }
 
@@ -91,15 +94,16 @@ export async function evaluateGates(workOrderId, phase) {
   };
 }
 
-async function evaluateAutoRule(key, workOrder) {
+async function evaluateAutoRule(key, workOrder, materials) {
   switch (key) {
     case 'konstruktion.ritning_uppladdad':
       return !!workOrder.drawing_url;
 
-    case 'konstruktion.bom_komplett':
+    case 'konstruktion.bom_komplett': {
       // Check if materials_needed has items OR WorkOrderMaterial rows exist
       const hasMaterials = Array.isArray(workOrder.materials_needed) && workOrder.materials_needed.length > 0;
-      return hasMaterials || (workOrder.materials?.length > 0);
+      return hasMaterials || (materials.length > 0);
+    }
 
     case 'konstruktion.anteckningar_ifyllda': {
       const notes = workOrder.workorder_notes || '';
@@ -116,9 +120,8 @@ async function evaluateAutoRule(key, workOrder) {
 
     case 'lager.alla_rader_hanterade': {
       // All materials must be picked OR marked missing
-      const mats = workOrder.materials || [];
-      if (mats.length === 0) return false;
-      return mats.every((m) => m.quantity_picked >= m.quantity_needed || m.status === 'not_needed');
+      if (materials.length === 0) return false;
+      return materials.every((m) => m.quantity_picked >= m.quantity_needed || m.status === 'not_needed');
     }
 
     case 'montering.checklista_klar': {

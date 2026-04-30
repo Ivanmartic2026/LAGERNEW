@@ -4,6 +4,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import { lazy, Suspense, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useRealtimeNotifications } from '@/hooks/useWebSocket';
 import KeyboardHelp from '@/components/KeyboardHelp';
 const VisualEditAgent = lazy(() => import('@/lib/VisualEditAgent'))
 import NavigationTracker from '@/lib/NavigationTracker'
@@ -71,6 +72,11 @@ function GlobalKeyboardShortcuts() {
   return null;
 }
 
+function RealtimeNotificationListener() {
+  useRealtimeNotifications();
+  return null;
+}
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = useLocation();
@@ -109,6 +115,7 @@ const AuthenticatedApp = () => {
   return (
     <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-black"><div className="w-8 h-8 border-4 border-zinc-700 border-t-white rounded-full animate-spin"></div></div>}>
       <GlobalKeyboardShortcuts />
+      <RealtimeNotificationListener />
       <Routes>
         <Route path="/" element={
           <LayoutWrapper currentPageName={mainPageKey}>

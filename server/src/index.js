@@ -8,7 +8,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
 import { prisma } from './lib/db.js';
+import { setWss } from './services/autoTransitionService.js';
 
 import { authRouter } from './routes/auth.js';
 import { entitiesRouter } from './routes/entities.js';
@@ -22,7 +25,18 @@ import { dirname, join } from 'path';
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
 export { prisma };
+
+// ── WebSocket server ──
+const wss = new WebSocketServer({ server, path: '/ws' });
+setWss(wss);
+
+wss.on('connection', (ws) => {
+  console.log('[WS] Client connected');
+  ws.on('close', () => console.log('[WS] Client disconnected'));
+  ws.on('error', (err) => console.error('[WS] Error:', err.message));
+});
 
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -134,8 +148,9 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Lager IM Server running on http://localhost:${PORT}`);
+  console.log(`   WebSocket:   ws://localhost:${PORT}/ws`);
   console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`   Frontend:    ${FRONTEND_URL}`);
 });

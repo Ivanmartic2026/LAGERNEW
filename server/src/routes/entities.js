@@ -132,6 +132,30 @@ router.post('/:entityName', validateEntity, async (req, res, next) => {
     const model = prisma[entityName.charAt(0).toLowerCase() + entityName.slice(1)];
 
     const item = await model.create({ data: req.body });
+
+    // Broadcast real-time events
+    if (entityName === 'ChatMessage') {
+      broadcastEvent('chat-message', {
+        id: item.id,
+        work_order_id: item.work_order_id,
+        author_email: item.author_email,
+        author_name: item.author_name,
+        body: item.body,
+        parent_id: item.parent_id,
+        mentions: item.mentions,
+      });
+
+      if (item.mentions?.length > 0) {
+        broadcastEvent('mention', {
+          id: item.id,
+          work_order_id: item.work_order_id,
+          author_name: item.author_name,
+          body: item.body,
+          mentions: item.mentions,
+        });
+      }
+    }
+
     res.status(201).json(item);
   } catch (err) {
     next(err);
