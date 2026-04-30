@@ -169,6 +169,11 @@ function App() {
                 <WorkOrderViewPage />
               </LayoutWrapper>
             } />
+            <Route path="/WorkOrders/:workOrderId/:tab" element={
+              <LayoutWrapper currentPageName="WorkOrders">
+                <WorkOrderViewPage />
+              </LayoutWrapper>
+            } />
 
             {/* Project Report */}
             <Route path="/ProjectReport" element={<ProjectReport />} />
