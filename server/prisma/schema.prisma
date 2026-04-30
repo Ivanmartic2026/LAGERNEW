@@ -1844,6 +1844,82 @@ model SavedBoardView {
   is_default  Boolean  @default(false)
 }
 
+enum GateItemStatus {
+  auto_ok
+  auto_pending
+  manual_ok
+  manual_pending
+  not_applicable
+}
+
+enum GateItemSeverity {
+  soft
+  hard
+}
+
+enum TransitionType {
+  manual
+  automatic
+  back_send
+  pause
+  resume
+  cancel
+}
+
+model GateChecklistTemplate {
+  id              String           @id @default(uuid())
+  createdAt       DateTime         @default(now()) @map("created_date")
+  updatedAt       DateTime         @updatedAt @map("updated_date")
+
+  phase           String           // 'konstruktion', 'produktion', etc.
+  key             String           // stable identifier, e.g. "konstruktion.ritning_uppladdad"
+  label           String           // display name in Swedish
+  severity        GateItemSeverity @default(soft)
+  auto_evaluated  Boolean          @default(true)
+  sort_order      Int              @default(0)
+  active          Boolean          @default(true)
+
+  @@unique([phase, key])
+  @@index([phase, active])
+}
+
+model GateChecklistItem {
+  id              String       @id @default(uuid())
+  createdAt       DateTime     @default(now()) @map("created_date")
+  updatedAt       DateTime     @updatedAt @map("updated_date")
+
+  work_order_id   String
+  phase           String
+  key             String
+  label           String
+  status          GateItemStatus @default(auto_pending)
+  severity        GateItemSeverity @default(soft)
+  auto_evaluated  Boolean      @default(true)
+
+  completed_at    DateTime?
+  completed_by    String?
+
+  sort_order      Int          @default(0)
+
+  @@unique([work_order_id, phase, key])
+  @@index([work_order_id, phase])
+}
+
+model PhaseTransition {
+  id              String         @id @default(uuid())
+  createdAt       DateTime       @default(now()) @map("created_date")
+
+  work_order_id   String
+  from_phase      String
+  to_phase        String
+  triggered_by    String         // user_id or email
+  trigger_type    TransitionType @default(manual)
+  red_flags       String[]
+  comment         String?
+
+  @@index([work_order_id, createdAt])
+}
+
 model WorkOrderMaterial {
   id                    String   @id @default(uuid())
   createdAt             DateTime @default(now()) @map("created_date")

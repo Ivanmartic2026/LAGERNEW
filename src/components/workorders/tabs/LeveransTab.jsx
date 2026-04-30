@@ -1,12 +1,15 @@
 import React from 'react';
 import { FileCheck, Send, MessageSquare } from 'lucide-react';
+import GateChecklist from '@/components/workorders/GateChecklist';
 
-export default function LeveransTab({ workOrder }) {
+export default function LeveransTab({ workOrder, workOrderId }) {
   const signedOffBy = workOrder?.signed_off_by;
   const signedOffDate = workOrder?.signed_off_date;
 
   return (
     <div className="space-y-5">
+      <GateChecklist workOrderId={workOrderId} phase="leverans" />
+
       {/* Ansvarig */}
       <div className="bg-white/[0.03] rounded-xl border border-white/10 p-4">
         <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Ansvarig leverans</h3>

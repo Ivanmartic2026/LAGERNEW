@@ -187,19 +187,19 @@ export default function WorkOrderViewPage() {
                 <OverviewTab workOrder={workOrder} order={order} roles={roles} />
               )}
               {activeTab === 'konstruktion' && (
-                <KonstruktionTab workOrder={workOrder} onSaveNotes={handleSaveNotes} />
+                <KonstruktionTab workOrder={workOrder} workOrderId={workOrderId} onSaveNotes={handleSaveNotes} />
               )}
               {activeTab === 'produktion' && (
-                <ProduktionTab workOrder={workOrder} />
+                <ProduktionTab workOrder={workOrder} workOrderId={workOrderId} />
               )}
               {activeTab === 'lager' && (
                 <LagerTab workOrder={workOrder} workOrderId={workOrderId} />
               )}
               {activeTab === 'montering' && (
-                <MonteringTab workOrder={workOrder} />
+                <MonteringTab workOrder={workOrder} workOrderId={workOrderId} />
               )}
               {activeTab === 'leverans' && (
-                <LeveransTab workOrder={workOrder} />
+                <LeveransTab workOrder={workOrder} workOrderId={workOrderId} />
               )}
             </div>
           </div>

@@ -1,12 +1,15 @@
 import React from 'react';
 import { Factory, FileText, CheckSquare } from 'lucide-react';
+import GateChecklist from '@/components/workorders/GateChecklist';
 
-export default function ProduktionTab({ workOrder }) {
+export default function ProduktionTab({ workOrder, workOrderId }) {
   const productionNotes = workOrder?.production_notes || '';
   const productionStatus = workOrder?.production_status;
 
   return (
     <div className="space-y-5">
+      <GateChecklist workOrderId={workOrderId} phase="produktion" />
+
       {/* Ansvarig */}
       <div className="bg-white/[0.03] rounded-xl border border-white/10 p-4">
         <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Ansvarig produktion</h3>

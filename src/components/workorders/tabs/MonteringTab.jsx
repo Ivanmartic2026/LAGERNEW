@@ -1,12 +1,15 @@
 import React from 'react';
 import { MapPin, CheckSquare, Camera } from 'lucide-react';
+import GateChecklist from '@/components/workorders/GateChecklist';
 
-export default function MonteringTab({ workOrder }) {
+export default function MonteringTab({ workOrder, workOrderId }) {
   const installationDate = workOrder?.installation_date;
   const technicianName = workOrder?.technician_name;
 
   return (
     <div className="space-y-5">
+      <GateChecklist workOrderId={workOrderId} phase="montering" />
+
       {/* Ansvarig */}
       <div className="bg-white/[0.03] rounded-xl border border-white/10 p-4">
         <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Ansvarig tekniker</h3>

@@ -21,6 +21,8 @@ import { sendPushNotification } from '../functions/sendPushNotification.js';
 import { getWorkOrderMaterials } from '../functions/getWorkOrderMaterials.js';
 import { getPurchaseNeeds } from '../functions/getPurchaseNeeds.js';
 import { getBoard } from '../functions/getBoard.js';
+import { getGateChecklist } from '../functions/getGateChecklist.js';
+import { toggleGateItem } from '../functions/toggleGateItem.js';
 
 const router = Router();
 
@@ -40,6 +42,8 @@ const handlers = {
   getWorkOrderMaterials,
   getPurchaseNeeds,
   getBoard,
+  getGateChecklist,
+  toggleGateItem,
 };
 
 router.post('/:functionName', (req, res, next) => {

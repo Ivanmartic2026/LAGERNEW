@@ -1,34 +1,22 @@
 /**
  * updateWorkOrderStage
- * Handles stage transitions for WorkOrders with validation, timestamps,
- * linked Order updates, and activity logging.
+ * Handles stage transitions with gate evaluation, red flags, backward transitions,
+ * PhaseTransition logging, and activity logging.
  */
 
 import { prisma } from '../lib/db.js';
+import { evaluateGates } from '../services/gateService.js';
 
-const STAGE_ORDER = ['konstruktion', 'produktion', 'lager', 'montering', 'leverans'];
+const STAGE_ORDER = ['inkorg', 'konstruktion', 'produktion', 'lager', 'montering', 'leverans'];
 
 const STAGE_LABELS = {
+  inkorg: 'Inkorg',
   konstruktion: 'Konstruktion',
   produktion: 'Produktion',
   lager: 'Lager',
   montering: 'Montering',
   leverans: 'Leverans',
   completed: 'Slutförd',
-};
-
-const STAGE_GATES = {
-  lager: [
-    { field: 'picked', label: 'Plockat' },
-  ],
-  montering: [
-    { field: 'assembled', label: 'Monterat' },
-    { field: 'tested', label: 'Testat' },
-  ],
-  leverans: [
-    { field: 'packed', label: 'Paketerat' },
-    { field: 'ready_for_delivery', label: 'Redo för leverans' },
-  ],
 };
 
 const STAGE_TIMESTAMPS = {
@@ -47,16 +35,9 @@ function getTransitionType(current, target) {
   const targetIdx = STAGE_ORDER.indexOf(target);
   if (currentIdx === -1 || targetIdx === -1) return 'invalid';
   if (currentIdx === targetIdx) return 'same';
-  if (targetIdx === currentIdx + 1) return 'forward';
-  if (targetIdx === currentIdx - 1) return 'backward';
+  if (targetIdx > currentIdx) return 'forward';
+  if (targetIdx < currentIdx) return 'backward';
   return 'invalid';
-}
-
-function validateGates(workOrder, stage) {
-  const gates = STAGE_GATES[stage] || [];
-  const checklist = workOrder.checklist || {};
-  const incomplete = gates.filter((g) => !checklist[g.field]);
-  return { valid: incomplete.length === 0, incomplete };
 }
 
 function escapeHtml(str) {
@@ -76,7 +57,7 @@ export async function updateWorkOrderStage(req, res, next) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { work_order_id, target_stage } = req.body;
+    const { work_order_id, target_stage, comment, force = false } = req.body;
     if (!work_order_id || !target_stage) {
       return res.status(400).json({
         error: 'Missing required fields: work_order_id, target_stage',
@@ -119,20 +100,43 @@ export async function updateWorkOrderStage(req, res, next) {
       });
     }
 
-    // Validate gates for forward transitions
+    // Evaluate gates for forward transitions
+    let redFlags = [];
+    let gateResult = null;
+
     if (transition === 'forward') {
-      const gateCheck = validateGates(workOrder, currentStage);
-      if (!gateCheck.valid) {
-        return res.status(400).json({
-          error: 'Stage gates incomplete',
-          incomplete_gates: gateCheck.incomplete,
-          current_stage: currentStage,
+      gateResult = await evaluateGates(work_order_id, currentStage);
+
+      if (!gateResult.allHardMet && !force) {
+        return res.status(409).json({
+          error: 'GATE_NOT_MET',
+          message: 'Hårda gate-villkor är inte uppfyllda',
+          details: {
+            hardBlockers: gateResult.items.filter((i) => i.severity === 'hard' && (i.status === 'auto_pending' || i.status === 'manual_pending')),
+            softBlockers: gateResult.items.filter((i) => i.severity === 'soft' && (i.status === 'auto_pending' || i.status === 'manual_pending')),
+            canForce: gateResult.hardBlockers === 0,
+          },
         });
+      }
+
+      if (!gateResult.allMet) {
+        // Collect red flags for incomplete soft gates
+        redFlags = gateResult.items
+          .filter((i) => i.status !== 'auto_ok' && i.status !== 'manual_ok')
+          .map((i) => i.key);
       }
     }
 
+    // Backward transition requires comment
+    if (transition === 'backward' && !comment) {
+      return res.status(422).json({
+        error: 'COMMENT_REQUIRED',
+        message: 'Bakåtflyttning kräver en kommentar med anledning',
+      });
+    }
+
     // Build update data
-    const now = new Date().toISOString();
+    const now = new Date();
     const updateData = {};
 
     if (target_stage === 'completed') {
@@ -145,63 +149,79 @@ export async function updateWorkOrderStage(req, res, next) {
 
     const timestampField = STAGE_TIMESTAMPS[target_stage];
     if (timestampField) {
-      updateData[timestampField] = now;
+      updateData[timestampField] = now.toISOString();
     }
 
-    // Update WorkOrder
-    const updatedWO = await prisma.workOrder.update({
-      where: { id: workOrder.id },
-      data: updateData,
-    });
-
-    // If completed, update linked Order (best effort)
-    let orderUpdateWarning = null;
-    if (target_stage === 'completed' && workOrder.order_id) {
-      try {
-        await prisma.order.update({
-          where: { id: workOrder.order_id },
-          data: { status: 'MONTERING' },
-        });
-      } catch (err) {
-        orderUpdateWarning = `Order update failed: ${err.message}`;
-        console.error(`[WARN] updateWorkOrderStage: Order update failed after WO completion: ${err.message}`);
-      }
+    // Red flag tracking
+    if (redFlags.length > 0) {
+      updateData.red_flag_active = true;
+      updateData.red_flag_reasons = redFlags;
+    } else if (transition === 'forward') {
+      // Clear red flag if moving forward and all gates met
+      updateData.red_flag_active = false;
+      updateData.red_flag_reasons = [];
     }
 
-    // Log activity
-    try {
-      const isCompletion = target_stage === 'completed';
-      const logMessage = isCompletion
-        ? 'Arbetsorder slutförd'
-        : `Fas ändrades: "${STAGE_LABELS[currentStage] || currentStage}" → "${STAGE_LABELS[target_stage] || target_stage}"`;
+    // Back-forth count
+    if (transition === 'backward') {
+      updateData.back_forth_count = (workOrder.back_forth_count || 0) + 1;
+    }
 
-      await prisma.workOrderActivity.create({
+    updateData.last_phase_changed_at = now;
+
+    // ── Atomic transaction ──
+    const [updatedWorkOrder, phaseTransition, activityLog] = await prisma.$transaction([
+      prisma.workOrder.update({
+        where: { id: work_order_id },
+        data: updateData,
+      }),
+      prisma.phaseTransition.create({
         data: {
-          work_order_id: workOrder.id,
-          type: 'status_change',
-          message: logMessage,
-          field_name: isCompletion ? 'Status' : 'Fas',
-          old_value: STAGE_LABELS[currentStage] || currentStage,
-          new_value: isCompletion ? 'Klar' : (STAGE_LABELS[target_stage] || target_stage),
-          actor_email: user.email,
-          actor_name: escapeHtml(user.full_name || user.email),
-          is_decision: false,
+          work_order_id,
+          from_phase: currentStage,
+          to_phase: target_stage === 'completed' ? 'leverans' : target_stage,
+          triggered_by: user.email || user.id,
+          trigger_type: transition === 'backward' ? 'back_send' : 'manual',
+          red_flags: redFlags,
+          comment: comment || null,
         },
-      });
-    } catch (logErr) {
-      console.error('[WARN] updateWorkOrderStage: Activity log failed:', logErr.message);
-    }
+      }),
+      prisma.workOrderActivity.create({
+        data: {
+          work_order_id,
+          type: 'status_change',
+          message: transition === 'backward'
+            ? `Skickad tillbaka från ${STAGE_LABELS[currentStage]} till ${STAGE_LABELS[target_stage]}${comment ? ': ' + escapeHtml(comment) : ''}`
+            : redFlags.length > 0
+              ? `Frigjord till ${STAGE_LABELS[target_stage]} med röd flagga (${redFlags.length} ouppfyllda villkor)`
+              : `Frigjord till ${STAGE_LABELS[target_stage]}`,
+          actor_email: user.email,
+          actor_name: user.full_name || user.email,
+          metadata: {
+            from_phase: currentStage,
+            to_phase: target_stage,
+            red_flags: redFlags,
+            transition_type: transition,
+            comment: comment || null,
+          },
+        },
+      }),
+    ]);
 
     return res.json({
       success: true,
-      workOrder: updatedWO,
+      workOrder: updatedWorkOrder,
+      transition: phaseTransition,
+      redFlagsRaised: redFlags,
       previous_stage: currentStage,
-      new_stage: target_stage === 'completed' ? 'leverans' : target_stage,
-      status: target_stage === 'completed' ? 'klar' : 'p_g_r',
-      transition_type: transition,
-      order_update_warning: orderUpdateWarning,
+      new_stage: updatedWorkOrder.current_stage,
+      message: transition === 'backward'
+        ? `Skickad tillbaka till ${STAGE_LABELS[target_stage]}`
+        : `Frigjord till ${STAGE_LABELS[target_stage]}`,
     });
+
   } catch (error) {
+    console.error('updateWorkOrderStage error:', error);
     next(error);
   }
 }
