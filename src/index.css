@@ -1,0 +1,324 @@
+/* IM Vision Brand Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Ropa+Sans&family=Roboto:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* IM Vision Brand Colors */
+    --brand-signal: 264 100% 50%;       /* #6300FF */
+    --brand-signal-hover: 264 100% 42%; /* #5200D9 */
+    --brand-signal-active: 264 100% 35%;/* #4400B3 */
+    --brand-signal-subtle: 264 100% 96%;/* #F3EAFF */
+    --brand-signal-light: 264 100% 90%; /* #E0C8FF */
+
+    /* Light mode tokens */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;           /* #171717 */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 264 100% 50%;         /* #6300FF signal */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 0%;            /* #000000 */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;    /* #737373 */
+    --accent: 264 100% 96%;          /* #F3EAFF subtle */
+    --accent-foreground: 264 100% 50%;
+    --destructive: 0 72% 51%;        /* #DC2626 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;              /* #E5E5E5 */
+    --input: 0 0% 83%;               /* #D4D4D4 */
+    --ring: 264 100% 50%;            /* #6300FF */
+    --radius: 0.375rem;              /* 6px */
+
+    /* Status colors */
+    --status-verified: 142 76% 36%;
+    --status-pending: 38 92% 50%;
+    --status-quarantine: 0 72% 51%;
+    --status-blocked: 25 95% 53%;
+    --status-info: 199 89% 48%;
+
+    /* Charts */
+    --chart-1: 264 100% 50%;
+    --chart-2: 142 76% 36%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 0 72% 51%;
+    --chart-5: 199 89% 48%;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 264 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 264 100% 10%;
+    --sidebar-accent-foreground: 264 100% 50%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 264 100% 50%;
+  }
+
+  .dark {
+    --background: 0 0% 4%;           /* #0A0A0A */
+    --foreground: 0 0% 98%;          /* #FAFAFA */
+    --card: 0 0% 9%;                 /* #171717 */
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 264 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 15%;          /* #262626 */
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 264 100% 10%;
+    --accent-foreground: 264 100% 80%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 15%;             /* #262626 */
+    --input: 0 0% 15%;
+    --ring: 264 100% 50%;
+
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 264 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 264 100% 10%;
+    --sidebar-accent-foreground: 264 100% 80%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 264 100% 50%;
+  }
+}
+
+/* IM Vision Typography */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+  }
+
+  h1 {
+    font-family: 'Ropa Sans', sans-serif;
+    font-size: 32px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-weight: 400;
+  }
+
+  h2 {
+    font-family: 'Ropa Sans', sans-serif;
+    font-size: 24px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-weight: 400;
+  }
+
+  h3 {
+    font-family: 'Ropa Sans', sans-serif;
+    font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-weight: 400;
+  }
+
+  h4, h5, h6 {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+  }
+}
+
+/* IM Vision utility classes */
+@layer utilities {
+  .font-brand {
+    font-family: 'Ropa Sans', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .font-body {
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .text-signal {
+    color: #6300FF;
+  }
+
+  .bg-signal {
+    background-color: #6300FF;
+  }
+
+  .border-signal {
+    border-color: #6300FF;
+  }
+
+  /* Status badge utility classes */
+  .badge-verified {
+    @apply bg-green-100 text-green-800 border border-green-200;
+    font-family: 'Ropa Sans', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .badge-pending {
+    @apply bg-amber-100 text-amber-800 border border-amber-200;
+    font-family: 'Ropa Sans', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .badge-quarantine {
+    @apply bg-red-100 text-red-800 border border-red-200;
+    font-family: 'Ropa Sans', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .badge-blocked {
+    @apply bg-orange-100 text-orange-800 border border-orange-200;
+    font-family: 'Ropa Sans', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .badge-info {
+    @apply bg-sky-100 text-sky-800 border border-sky-200;
+    font-family: 'Ropa Sans', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  /* Triangle brand element */
+  .brand-triangle {
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 35px solid #6300FF;
+  }
+}
+
+/* Navigation active state */
+.nav-item-active {
+  border-left: 4px solid #6300FF;
+  color: #6300FF;
+  background: rgba(99, 0, 255, 0.1);
+}
+
+/* Focus ring consistent with brand */
+*:focus-visible {
+  outline: 2px solid #6300FF;
+  outline-offset: 2px;
+}
+
+/* Safe area for notch/home indicator — standalone PWA mode */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-area-top    { padding-top: env(safe-area-inset-top); }
+  .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-area-left   { padding-left: env(safe-area-inset-left); }
+  .safe-area-right  { padding-right: env(safe-area-inset-right); }
+}
+
+/* Chat input safe area in standalone mode */
+@media (display-mode: standalone) {
+  .chat-input-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+  }
+}
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* PWA Mobile Optimizations */
+html, body, #root {
+  background-color: #000000;
+}
+
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+.select-text,
+.select-text * {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+
+input, textarea, select {
+  -webkit-user-select: text;
+  user-select: text;
+  font-size: 16px;
+  font-family: 'Roboto', sans-serif;
+}
+
+@media (max-width: 768px) {
+  button, a, input[type="checkbox"], input[type="radio"], select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  body {
+    font-size: 16px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

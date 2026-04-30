@@ -1,0 +1,1689 @@
+// This Prisma schema was auto-generated from Base44 entity JSONC schemas
+// ⚠️  Review and adjust before using in production
+//     - Verify enum values match actual data
+//     - Add @relation fields for foreign keys
+//     - Adjust types (Float → Int where appropriate)
+//     - Add indexes for frequently queried fields
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ArticleCategory {
+  Cabinet
+  LED_Module
+  Power_Supply
+  Receiving_Card
+  Control_Processor
+  Computer
+  Cable
+  Accessory
+  Other
+}
+
+enum ArticleStorage_type {
+  company_owned
+  customer_owned
+  rental_stock
+}
+
+enum ArticleSeries {
+  Indoor
+  Outdoor
+  UltraBright
+  QP4
+  Other
+}
+
+enum ArticleStatus {
+  active
+  low_stock
+  out_of_stock
+  discontinued
+  on_repair
+  in_transit
+  on_its_way_home
+  unknown_delivery
+  pending_verification
+}
+
+enum BatchSupplier_source {
+  label_explicit
+  ai_inferred
+  po_linked
+  manual
+  unknown
+}
+
+enum BatchStatus {
+  pending_verification
+  verified
+  rejected
+  quarantine
+}
+
+enum BatchSource_context {
+  purchase_receiving
+  article_creation
+  repair_return
+  site_report
+  production
+  manual
+  migrated_from_article
+  migrated_from_repairlog
+}
+
+enum BatchActivityType {
+  comment
+  system
+  decision
+  field_change
+  reanalysis
+  suggestion_accepted
+  suggestion_rejected
+}
+
+enum BatchAnalysisAnalysis_type {
+  quality_check
+  production_test
+  repair_diagnosis
+  site_inspection
+  return_inspection
+  label_verification
+  supplier_qc
+  other
+}
+
+enum BatchAnalysisSource_type {
+  manual
+  ai_scan
+  document_parse
+  technician_report
+  production_scan
+  external_lab
+}
+
+enum BatchAnalysisStatus {
+  pending
+  passed
+  failed
+  needs_review
+  conclusive
+  inconclusive
+}
+
+enum BatchAnalysisSeverity {
+  info
+  warning
+  critical
+}
+
+enum BatchPatternRulePattern_type {
+  prefix
+  suffix
+  regex
+  length
+  composite
+}
+
+enum BatchPatternRuleApplies_to {
+  article
+  batch
+  both
+}
+
+enum BatchPatternRuleSource {
+  ai_inferred
+  manual
+  confirmed_from_ai
+}
+
+enum BatchPatternRuleStatus {
+  active
+  suggested
+  rejected
+  superseded
+}
+
+enum BatchSuggestionSuggestion_type {
+  supplier_link
+  article_link
+  batch_number_correction
+  date_fill
+  pattern_normalization
+  reanalyze_image
+  merge_duplicate
+}
+
+enum BatchSuggestionStatus {
+  pending
+  accepted
+  rejected
+  expired
+}
+
+enum DeliveryRecordStatus {
+  draft
+  shipped
+  delivered
+  cancelled
+}
+
+enum DrivingJournalEntrySource {
+  imworkspace
+  manual
+}
+
+enum InternalWithdrawalStatus {
+  pending
+  linked
+}
+
+enum InventoryCountScope {
+  full
+  location
+  category
+}
+
+enum InventoryCountStatus {
+  in_progress
+  pending_review
+  approved
+  cancelled
+}
+
+enum LabelScanStatus {
+  queued
+  processing
+  completed
+  failed
+  manual_review
+  migrated_legacy
+}
+
+enum LabelScanContext {
+  purchase_receiving
+  article_creation
+  repair_return
+  site_report
+  production
+  manual_scan
+  reanalysis
+  pick
+  ship_out
+  move_location
+  stock_adjustment
+  inventory_count
+  service
+}
+
+enum MergeApprovalQueueQueue_type {
+  article_duplicate
+  batch_duplicate
+}
+
+enum MergeApprovalQueueStatus {
+  pending_review
+  approved_merge
+  rejected_keep_separate
+  skipped
+}
+
+enum NotificationType {
+  order_status
+  low_stock
+  stock_alert
+  repair_update
+  purchase_order
+  system
+  chat_mention
+  chat_dm
+  chat_new_message
+}
+
+enum NotificationPriority {
+  low
+  normal
+  high
+  critical
+}
+
+enum OrderStatus {
+  S_LJ
+  KONSTRUKTION
+  PRODUKTION
+  LAGER
+  MONTERING
+}
+
+enum OrderFinancial_status {
+  unbilled
+  pending_billing
+  billed
+}
+
+enum OrderDelivery_method {
+  truck
+  courier
+  pickup
+  air_freight
+  sea_freight
+  other
+}
+
+enum OrderInstallation_type {
+  ny_installation
+  byte_uppgradering
+  tillagg
+  service_reparation
+  uthyrning_event
+}
+
+enum OrderItemStatus {
+  pending
+  partial
+  picked
+}
+
+enum OrderPickListStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+enum POActivityType {
+  comment
+  system
+  decision
+  assignment
+  file_upload
+  status_change
+  field_change
+}
+
+enum PatternInferenceLogTriggered_by {
+  manual
+  scheduled
+}
+
+enum ProductionActivityType {
+  comment
+  system
+  decision
+  assignment
+  file_upload
+  status_change
+  field_change
+}
+
+enum ProductionRecordProduction_status {
+  started
+  in_progress
+  assembled
+  tested
+  completed
+}
+
+enum ProjectExpenseType {
+  driving
+  material
+  other
+}
+
+enum ProjectExpenseSource {
+  imworkspace
+  manual
+}
+
+enum PurchaseOrderPurchase_type {
+  p_fyllning_lager
+  specifik_kundorder
+  dropship
+  projekt_intern
+}
+
+enum PurchaseOrderPayment_terms {
+  v30_dagar_netto
+  v10_dagar_2_procent
+  omedelbar_betalning
+  v60_dagar_netto
+  v100_procent_forskott
+}
+
+enum PurchaseOrderDelivery_terms {
+  EXW
+  FOB
+  CIF
+  DAP
+  DDP
+}
+
+enum PurchaseOrderMode_of_transport {
+  air_freight_express
+  air_freight_economy
+  sea_freight
+  rail_transport
+  road_transport
+  courier
+}
+
+enum PurchaseOrderCost_center {
+  v10_support_service
+  v20_rental
+  v30_sales
+  v99_generell
+}
+
+enum PurchaseOrderFortnox_po_sync_status {
+  not_synced
+  synced
+  sync_error
+}
+
+enum PurchaseOrderStatus {
+  draft
+  sent
+  confirmed
+  waiting_for_supplier_documentation
+  in_production
+  shipped
+  ready_for_reception
+  received
+  cancelled
+}
+
+enum PurchaseOrderInvoice_currency {
+  SEK
+  EUR
+  USD
+  GBP
+  NOK
+  DKK
+}
+
+enum PurchaseOrderDelivery_method {
+  air_freight
+  sea_freight
+  truck
+  courier
+  pickup
+  other
+}
+
+enum PurchaseOrderDocumentation_status {
+  incomplete
+  partial
+  complete
+}
+
+enum PurchaseOrderPayment_percentage_sent {
+  v20_
+  v50_
+  v100_
+}
+
+enum PurchaseOrderItemStatus {
+  pending
+  confirmed
+  partial
+  received
+}
+
+enum RepairLogStatus {
+  in_progress
+  completed
+  discarded
+  cancelled
+}
+
+enum ScanMatchAuditDecision {
+  auto_link
+  review_queue
+  no_match_prompt_create
+}
+
+enum ServiceLogService_type {
+  cleaning
+  calibration
+  preventive
+  firmware_update
+  consumable_replacement
+  inspection
+  other
+}
+
+enum ServiceLogStatus {
+  completed
+  needs_followup
+}
+
+enum SiteReportStatus {
+  pending_review
+  in_review
+  completed
+  archived
+}
+
+enum SiteReportImageMatch_status {
+  pending
+  matched
+  confirmed
+  rejected
+}
+
+enum SiteReportImageComponent_status {
+  ok
+  needs_replacement
+  needs_repair
+  documented
+}
+
+enum StockAdjustmentAdjustment_type {
+  increase
+  decrease
+  set_absolute
+}
+
+enum StockAdjustmentReason {
+  shrinkage
+  found_stock
+  miscount
+  damaged
+  correction
+  other
+}
+
+enum SyncLogStatus {
+  success
+  partial
+  error
+}
+
+enum SyncLogDirection {
+  to_fortnox
+  from_fortnox
+  internal
+}
+
+enum SystemAutomationAutomation_type {
+  task_generation
+  blocked_task_notification
+  po_late_warning
+  batch_verification_reminder
+  fortnox_sync_healthcheck
+  material_shortage_alert
+}
+
+enum TaskPriority {
+  low
+  normal
+  high
+  urgent
+}
+
+enum TaskStatus {
+  to_do
+  in_progress
+  completed
+  cancelled
+}
+
+enum TaskPhase {
+  s_ljare
+  konstruktion
+  produktion
+  lager
+  montering
+}
+
+enum TaskRole {
+  s_ljare
+  konstruktor
+  inkopare
+  lager
+  produktion
+  tekniker
+  ivan
+  admin
+}
+
+enum TaskTemplatePhase {
+  s_ljare
+  konstruktion
+  produktion
+  lager
+  montering
+  tekniker
+}
+
+enum TaskTemplateTrigger_event {
+  order_created
+  sales_completed
+  workorder_created
+  po_sent
+  po_confirmed
+  po_received
+  batch_pending_verification
+  batch_quarantine
+  production_started
+  production_completed
+  site_report_created
+}
+
+enum TaskTemplateDefault_role {
+  s_ljare
+  konstruktor
+  inkopare
+  lager
+  produktion
+  tekniker
+  ivan
+}
+
+enum TaskTemplateAuto_assign_rule {
+  assigned_to_field
+  round_robin
+  specific_user
+  manual
+}
+
+enum TaskTemplatePriority {
+  low
+  normal
+  high
+  urgent
+}
+
+enum UserRole {
+  s_ljare
+  konstruktor
+  inkopare
+  lager
+  produktion
+  tekniker
+  ivan
+  admin
+}
+
+enum WorkOrderInstallation_type {
+  ny_installation
+  byte_uppgradering
+  tillagg
+  service_reparation
+  uthyrning_event
+}
+
+enum WorkOrderCurrent_stage {
+  konstruktion
+  produktion
+  lager
+  montering
+  leverans
+}
+
+enum WorkOrderStatus {
+  v_ntande
+  p_g_r
+  klar
+  avbruten
+}
+
+enum WorkOrderProduction_status {
+  p_b_rjad
+  p_g_r
+  monterad
+  testad
+  klar
+}
+
+enum WorkOrderPriority {
+  l_g
+  normal
+  h_g
+  br_dskande
+}
+
+enum WorkOrderActivityType {
+  comment
+  system
+  decision
+  assignment
+  file_upload
+  status_change
+  field_change
+}
+
+model Article {
+  id                         String              @id @default(uuid())
+  createdAt                  DateTime            @default(now()) @map("created_date")
+  updatedAt                  DateTime            @updatedAt @map("updated_date")
+  sku                        String? // Artikelnummer
+  name                       String // Benämning
+  supplier_id                String? // Referens till leverantör @map("supplier_id")
+  supplier_name              String? // Leverantörens namn (för enklare sökning)
+  unit_cost                  Float? // Enhetskostnad
+  supplier_product_code      String? // Leverantörens produktkod
+  category                   ArticleCategory? // Typ av artikel
+  storage_type               ArticleStorage_type // Lagertyp
+  dimensions_width_mm        Float? // Bredd (mm)
+  dimensions_height_mm       Float? // Höjd (mm)
+  dimensions_depth_mm        Float? // Djup (mm)
+  weight_g                   Float? // Vikt (g)
+  stock_qty                  Float? // I lager (antal)
+  reserved_stock_qty         Float               @default(0) // Reserverat för pågående ordrar
+  warehouse                  String? // Lagerställe
+  shelf_address              String[] // Lagerplatser
+  batch_number               String? // LEGACY — migreras till Batch-entity, används bara för sökning. Nya data skrivs till Batch.batch_number
+  legacy_batch_number        String? // Sparad kopia av ursprunglig batch_number för auditspårning
+  primary_batch_id           String? // Referens till primär Batch-post @map("primary_batch_id")
+  ai_scan_count              Float               @default(0) // Antal AI-scanningar
+  pixel_pitch_mm             Float? // Pixel Pitch (mm)
+  customer_name              String? // Kundnamn/Marknadsnamn
+  pitch_value                String? // Pixel pitch värde (t.ex. P1.95, P2.6)
+  series                     ArticleSeries? // Produktserie/användning
+  product_version            String? // Produktversion
+  manufacturer               String? // Tillverkare
+  manufacturing_date         DateTime? // Tillverkningsdatum
+  brightness_nits            Float? // Ljusstyrka i nits
+  status                     ArticleStatus       @default(active) // Artikelstatus
+  transit_notes              String? // Anteckningar om transit/transport
+  transit_expected_date      DateTime? // Förväntat ankomstdatum för transit
+  image_urls                 String[] // Bilder på artikeln/etiketten
+  notes                      String? // Anteckningar
+  min_stock_level            Float? // Minsta lagernivå för varning
+  repair_notes               String? // Anledning till reparation
+  repair_date                DateTime? // Datum när artikel skickades på reparation
+  cfg_file_url               String? // Länk till CFG-konfigurationsfil
+  unknown_delivery_reference String? // Referensnummer för okänd inleverans
+  delivery_date              DateTime? // Datum för inleverans
+  assigned_to                String? // Vem som utreder den okända leveransen (email)
+  ai_extracted_data          Json? // Ursprunglig AI-extraherad data från scanning
+  ai_confidence_scores       Json? // AI confidence scores för extraherade fält
+  source_invoice_url         String? // Länk till originalfaktura som artikeln skapades från
+  source_invoice_number      String? // Fakturanummer som artikeln skapades från
+  source_purchase_order_id   String? // Referens till inköpsorder som artikeln skapades från @map("source_purchase_order_id")
+  fortnox_synced             Boolean             @default(false) // Om artikeln är synkad till Fortnox och kan auto-synkas
+}
+
+model Batch {
+  id                    String               @id @default(uuid())
+  createdAt             DateTime             @default(now()) @map("created_date")
+  updatedAt             DateTime             @updatedAt @map("updated_date")
+  batch_number          String // Normaliserat batchnummer (primärt index)
+  raw_batch_number      String? // Originalt batchnummer exakt som det lästes
+  article_id            String? // FK till Article (required, null endast om legacy_unmigrated=true) @map("article_id")
+  article_sku           String? // Artikelnummer (SKU)
+  article_name          String? // Artikelnamn
+  supplier_id           String? // Referens till leverantör @map("supplier_id")
+  supplier_name         String? // Leverantörsnamn
+  supplier_source       BatchSupplier_source @default(unknown) // Hur leverantören identifierades
+  purchase_order_id     String? // Referens till inköpsorder @map("purchase_order_id")
+  receiving_record_id   String? // Referens till mottagningspost @map("receiving_record_id")
+  quantity              Float? // Kvantitet
+  manufacturing_date    DateTime? // Tillverkningsdatum
+  expiry_date           DateTime? // Utgångsdatum
+  production_date       DateTime? // Produktionsdatum
+  batch_pattern         Json? // Mönsteranalys av batchnummer
+  risk_score            Float                @default(0) // Riskpoäng 0-100
+  risk_flags            String[] // Riskflaggor
+  status                BatchStatus          @default(pending_verification) // Status på batchen
+  verified_by           String? // Verifierad av (email)
+  verified_at           DateTime? // Verifieringstidpunkt
+  legacy_unmigrated     Boolean              @default(false) // Markerar poster skapade från migration men där artikelkopplingen är osäker
+  merged_from_batch_ids String[] // Historik om batchen skapats genom auto-merge av dubletter
+  coupling_count        Float                @default(0) // Antal kopplingar (PO-items, receiving, repair, orders, withdrawals)
+  source_context        BatchSource_context  @default(manual) // Källa/kontext för batchen
+  notes                 String? // Anteckningar
+}
+
+model BatchActivity {
+  id          String            @id @default(uuid())
+  createdAt   DateTime          @default(now()) @map("created_date")
+  updatedAt   DateTime          @updatedAt @map("updated_date")
+  batch_id    String // Referens till Batch @map("batch_id")
+  type        BatchActivityType // Typ av aktivitet
+  message     String? // Aktivitetsmeddelande
+  field_name  String? // Fältnamn som ändrades
+  old_value   String? // Gammalt värde
+  new_value   String? // Nytt värde
+  actor_email String? // Aktörens email
+  actor_name  String? // Aktörens namn
+  metadata    Json? // Extra metadata
+}
+
+model BatchAnalysis {
+  id                      String                      @id @default(uuid())
+  createdAt               DateTime                    @default(now()) @map("created_date")
+  updatedAt               DateTime                    @updatedAt @map("updated_date")
+  batch_id                String // FK till Batch (required) @map("batch_id")
+  article_id              String? // FK till Article (redundant cache för snabb query) @map("article_id")
+  analysis_type           BatchAnalysisAnalysis_type? // Typ av analys
+  source_type             BatchAnalysisSource_type? // Källtyp för analysen
+  source_reference_id     String? // ID till källposten (LabelScan/SiteReport/RepairLog/ProductionRecord osv) @map("source_reference_id")
+  source_reference_entity String? // Entity-namn på källan (t.ex. 'LabelScan', 'SiteReport')
+  analysis_date           DateTime? // Analysdatum
+  analyzed_by             String? // Analyserad av (email)
+  status                  BatchAnalysisStatus         @default(pending) // Status på analysen
+  severity                BatchAnalysisSeverity       @default(info) // Allvarlighetsgrad
+  summary                 String? // AI/human sammanfattning
+  findings                Json? // Strukturerade fynd: {issue_type, description, affected_quantity, recommended_action}
+  measurements            Json? // Mätdata: brightness, dimension, pixel_pitch_measured, etc
+  image_urls              String[] // Bilder från analys
+  label_scan_ids          String[] // Kopplade LabelScans
+  notes                   String? // Anteckningar
+  tags                    String[] // Taggar för kategorisering
+}
+
+model BatchPatternRule {
+  id                      String                       @id @default(uuid())
+  createdAt               DateTime                     @default(now()) @map("created_date")
+  updatedAt               DateTime                     @updatedAt @map("updated_date")
+  pattern_type            BatchPatternRulePattern_type // Typ av mönster
+  pattern_value           String // Mönstervärdet, t.ex. 'APP' för prefix
+  applies_to              BatchPatternRuleApplies_to   @default(batch) // Vad mönstret gäller för
+  preferred_supplier_id   String? // FK till Supplier @map("preferred_supplier_id")
+  preferred_supplier_name String? // Leverantörens namn
+  preferred_category      String? // Föredragen artikelkategori
+  preferred_series        String? // Föredragen produktserie
+  source                  BatchPatternRuleSource       @default(ai_inferred) // Källa till regeln
+  confidence              Float                        @default(0) // Konfidens 0-1 baserat på datarenheten
+  sample_count            Float                        @default(0) // Antal batcher som matchar mönstret
+  sample_batch_ids        String[] // Exempelbatch-IDs
+  conflict_count          Float                        @default(0) // Antal konflikterande batcher (annan leverantör)
+  status                  BatchPatternRuleStatus       @default(suggested) // Status på regeln
+  created_by              String? // Skapad av (email)
+  approved_by             String? // Godkänd av (email)
+  approved_at             DateTime? // Godkännandetidpunkt
+  notes                   String? // Anteckningar
+}
+
+model BatchSuggestion {
+  id                  String                         @id @default(uuid())
+  createdAt           DateTime                       @default(now()) @map("created_date")
+  updatedAt           DateTime                       @updatedAt @map("updated_date")
+  batch_id            String // Referens till Batch @map("batch_id")
+  suggestion_type     BatchSuggestionSuggestion_type // Typ av förslag
+  current_value       String? // Nuvarande värde
+  suggested_value     String? // Föreslagit värde
+  confidence          Float? // Confidence för förslaget (0-1)
+  reasoning           String? // Förklaring av varför förslaget gjordes
+  based_on_pattern_id String? // Referens till SupplierLabelPattern @map("based_on_pattern_id")
+  based_on_batch_ids  String[] // Batcher som förslaget baseras på
+  status              BatchSuggestionStatus          @default(pending) // Status på förslaget
+  decided_by          String? // Beslutad av (email)
+  decided_at          DateTime? // Beslutstidpunkt
+}
+
+model DeliveryRecord {
+  id                  String               @id @default(uuid())
+  createdAt           DateTime             @default(now()) @map("created_date")
+  updatedAt           DateTime             @updatedAt @map("updated_date")
+  delivery_number     String? // Leveransnummer (auto)
+  recipient_name      String? // Mottagarens namn
+  recipient_address   String? // Leveransadress
+  recipient_site      String? // Leveransplats/site
+  related_order_id    String? // FK till Order (valfritt) @map("related_order_id")
+  items               Json? // Levererade artiklar
+  shipped_by          String? // Avsänd av (email)
+  shipped_at          DateTime? // Avsändningstidpunkt
+  carrier             String? // Transportföretag
+  tracking_number     String? // Spårningsnummer
+  status              DeliveryRecordStatus @default(draft) // Leveransstatus
+  signed_by_recipient String? // Signerat av mottagare
+  signature_image_url String? // URL till signaturbild
+}
+
+model DrivingJournalEntry {
+  id            String                    @id @default(uuid())
+  createdAt     DateTime                  @default(now()) @map("created_date")
+  updatedAt     DateTime                  @updatedAt @map("updated_date")
+  projectNumber String // Projektnummer
+  date          DateTime // Datum för resan
+  driverName    String? // Förarens namn
+  fromLocation  String? // Startplats (fritext)
+  toLocation    String? // Destination (fritext)
+  fromAddress   String? // Startadress (strukturerad adress)
+  toAddress     String? // Destinationsadress (strukturerad adress)
+  fromLat       Float? // Startplats latitud
+  fromLng       Float? // Startplats longitud
+  toLat         Float? // Destination latitud
+  toLng         Float? // Destination longitud
+  startTime     String? // Starttid (ISO-sträng)
+  endTime       String? // Stopptid (ISO-sträng)
+  distanceKm    Float // Körsträcka i km
+  purpose       String? // Syfte med resan
+  vehicleReg    String? // Fordonets registreringsnummer
+  reporter      String? // Rapportör (email)
+  source        DrivingJournalEntrySource @default(manual) // Källa för posten
+}
+
+model FortnoxConfig {
+  id               String   @id @default(uuid())
+  createdAt        DateTime @default(now()) @map("created_date")
+  updatedAt        DateTime @updatedAt @map("updated_date")
+  access_token     String? // Fortnox OAuth access token
+  refresh_token    String // Fortnox OAuth refresh token
+  token_expires_at Float? // Timestamp when access token expires (milliseconds)
+}
+
+model FortnoxCustomer {
+  id                  String   @id @default(uuid())
+  createdAt           DateTime @default(now()) @map("created_date")
+  updatedAt           DateTime @updatedAt @map("updated_date")
+  customer_number     String // Fortnox kundnummer
+  name                String // Kundnamn
+  organisation_number String? // Organisationsnummer
+  city                String? // Ort
+  email               String? // E-post
+  phone               String? // Telefon
+  address1            String? // Adress
+  zip_code            String? // Postnummer
+  active              Boolean  @default(true) // Aktiv
+}
+
+model InternalWithdrawal {
+  id                   String                   @id @default(uuid())
+  createdAt            DateTime                 @default(now()) @map("created_date")
+  updatedAt            DateTime                 @updatedAt @map("updated_date")
+  article_id           String // Referens till artikel @map("article_id")
+  article_name         String? // Artikelnamn
+  article_batch_number String? // Batch nummer (legacy alias, använd batch_number)
+  batch_number         String? // Batch nummer (normaliserat)
+  quantity             Float // Uttagen kvantitet
+  customer_reference   String // Kund/kommentar om vart det ska
+  status               InternalWithdrawalStatus @default(pending) // Status - väntar på koppling eller kopplad
+  linked_order_id      String? // Kopplad till order (när status är linked) @map("linked_order_id")
+  withdrawn_by         String? // Vem som plockade ut (email)
+  notes                String? // Anteckningar
+}
+
+model InventoryCount {
+  id                  String               @id @default(uuid())
+  createdAt           DateTime             @default(now()) @map("created_date")
+  updatedAt           DateTime             @updatedAt @map("updated_date")
+  count_name          String? // Namn på inventeringen
+  count_date          DateTime? // Inventeringsdatum
+  scope               InventoryCountScope  @default(full) // Scope för inventeringen
+  scope_value         String? // T.ex. 'A1-A5' eller 'LED Module'
+  status              InventoryCountStatus @default(in_progress) // Status på inventeringssessionen
+  started_by          String? // Startad av (email)
+  started_at          DateTime? // Starttidpunkt
+  completed_at        DateTime? // Slutförandetidpunkt
+  approved_by         String? // Godkänd av (email)
+  count_items         Json? // Inventerade artiklar
+  total_items         Float                @default(0) // Totalt antal artiklar inventerade
+  total_discrepancies Float                @default(0) // Antal med avvikelse
+  total_delta_value   Float                @default(0) // Totalt ekonomiskt värde av differens
+}
+
+model KimiConfig {
+  id                                 String   @id @default(uuid())
+  createdAt                          DateTime @default(now()) @map("created_date")
+  updatedAt                          DateTime @updatedAt @map("updated_date")
+  model_name                         String   @default("moonshot-v1-8k-vision") // Kimi-modell att använda (moonshot-v1-8k-vision stödjer vision/bilder)
+  api_base_url                       String   @default("https://api.moonshot.ai/v1") // Moonshot API bas-URL
+  thinking_mode                      Boolean  @default(false) // Aktivera thinking mode — av för deterministisk label-parsing
+  prompt_version                     String   @default("v1") // Version av prompt-template
+  confidence_threshold_auto_approve  Float    @default(0.85) // Confidence-tröskel för automatiskt godkännande
+  confidence_threshold_manual_review Float    @default(0.6) // Confidence-tröskel för manuell granskning
+  max_retries                        Float    @default(2) // Max antal försök vid fel
+  timeout_ms                         Float    @default(90000) // Timeout i millisekunder (90s)
+  is_active                          Boolean  @default(true) // Om konfigurationen är aktiv
+  cost_limit_per_run                 Float    @default(10) // USD-tak per bulk-omanalys
+  monthly_cost_limit                 Float    @default(300) // USD-tak per månad
+  current_month_spend                Float    @default(0) // Ackumulerad kostnad denna månad i USD
+  current_month                      String? // YYYY-MM för att nollställa månadsbudget
+  min_confidence_to_save_batch       Float    @default(0.4) // Minsta confidence för att spara Batch-post
+}
+
+model LabelScan {
+  id                        String            @id @default(uuid())
+  createdAt                 DateTime          @default(now()) @map("created_date")
+  updatedAt                 DateTime          @updatedAt @map("updated_date")
+  batch_id                  String? // Referens till Batch @map("batch_id")
+  image_url                 String? // URL till bilden
+  image_hash                String? // SHA-256 hash av bilden
+  image_uploaded_by         String? // Uppladdad av (email)
+  image_uploaded_at         DateTime? // Uppladdningstidpunkt
+  ai_provider               String            @default("moonshot") // AI-leverantör
+  ai_model_used             String? // Använd AI-modell
+  ai_model_version          String? // Modellversion
+  ai_prompt_version         String? // Prompt-version som användes
+  ai_raw_response           Json? // Råsvar från AI (sparas oförändrat, inkl barcode_reads + ocr_regions)
+  ai_processing_duration_ms Float? // Bearbetningstid i millisekunder
+  ai_tokens_used            Float? // Antal tokens använda
+  ai_cost_usd               Float? // Kostnad i USD
+  extracted_fields          Json? // Extraherade fält från AI inkl barcode_values och ocr_regions
+  field_confidence          Json? // Confidence per fält (0-1) + overall
+  normalized_fields         Json? // Normaliserade fältvärden
+  match_results             Json? // Matchningsresultat från Lager 2 ScanMatch-resolver
+  status                    LabelScanStatus   @default(queued) // Bearbetningsstatus
+  error_message             String? // Felmeddelande
+  manual_corrections        Json? // Manuella korrigeringar av användaren
+  corrected_by              String? // Korrigerad av (email)
+  corrected_at              DateTime? // Korrigeringstidpunkt
+  context                   LabelScanContext? // Scanning-kontext
+  context_reference_id      String? // ID till kontextreferensen @map("context_reference_id")
+}
+
+model MergeApprovalQueue {
+  id                  String                       @id @default(uuid())
+  createdAt           DateTime                     @default(now()) @map("created_date")
+  updatedAt           DateTime                     @updatedAt @map("updated_date")
+  queue_type          MergeApprovalQueueQueue_type @default(article_duplicate) // Typ av dublett-merge
+  candidate_ids       String[] // IDs på potentiella dubletter
+  candidate_entity    String // Entity-namn, t.ex. Article eller Batch
+  similarity_key      String? // Värde som gjorde klassificering, t.ex. batch_number
+  winner_suggested_id String? // ID på post med högst coupling_count (förslag) @map("winner_suggested_id")
+  coupling_counts     Json? // ID → coupling count mappning
+  coupling_breakdown  Json? // Detaljerad breakdown per ID: {id: {po_items: n, receiving: n, repairs: n, orders: n, ...}}
+  fields_diff         Json? // Visar fältskillnader: {field_name: {id1: value1, id2: value2, ...}}
+  status              MergeApprovalQueueStatus     @default(pending_review) // Status på godkännande
+  reviewed_by         String? // Granskad av (email)
+  reviewed_at         DateTime? // Granskningstidpunkt
+  review_notes        String? // Noteringar från granskning
+  merge_executed      Boolean                      @default(false) // Om merge redan exekverad
+  merge_executed_at   DateTime? // Tidpunkt för merge-exekvering
+  rollback_snapshot   Json? // FULL snapshot av alla kandidat-poster + downstream-referenser INNAN merge
+}
+
+model MigrationRun {
+  id                 String    @id @default(uuid())
+  createdAt          DateTime  @default(now()) @map("created_date")
+  updatedAt          DateTime  @updatedAt @map("updated_date")
+  migration_name     String // Migrations-namn, t.ex. migrateArticleBatchNumbersToBatchEntity
+  run_date           DateTime? // Körtidpunkt
+  ran_by             String? // Kördes av (email)
+  input_summary      Json? // Antal poster innan migration
+  output_summary     Json? // Antal skapade/uppdaterade poster
+  rollback_snapshot  Json? // FULL snapshot av förändrade poster för rollback
+  rollback_available Boolean   @default(true) // Om rollback möjlig
+  rolled_back        Boolean   @default(false) // Om redan rulladbak
+  rolled_back_at     DateTime? // Rollback-tidpunkt
+  errors             String[] // Felmeddelanden under migration
+}
+
+model Notification {
+  id         String               @id @default(uuid())
+  createdAt  DateTime             @default(now()) @map("created_date")
+  updatedAt  DateTime             @updatedAt @map("updated_date")
+  user_email String // Mottagarens email
+  title      String // Notifieringens titel
+  message    String // Notifieringsmeddelande
+  type       NotificationType // Typ av notifiering
+  priority   NotificationPriority @default(normal) // Prioritet
+  is_read    Boolean              @default(false) // Om notifieringen är läst
+  link_to    String? // Länk till relevant sida (t.ex. orderId, articleId)
+  link_page  String? // Sidnamn att länka till
+  metadata   Json? // Extra metadata
+}
+
+model NotificationSettings {
+  id                     String   @id @default(uuid())
+  createdAt              DateTime @default(now()) @map("created_date")
+  updatedAt              DateTime @updatedAt @map("updated_date")
+  user_email             String // Användarens email
+  in_app_enabled         Boolean  @default(true) // In-app notifieringar aktiverade
+  email_enabled          Boolean  @default(true) // Email notifieringar aktiverade
+  order_status_updates   Boolean  @default(true) // Notifiering vid orderstatus ändringar
+  low_stock_alerts       Boolean  @default(true) // Notifiering vid lågt lager
+  purchase_order_updates Boolean  @default(true) // Notifiering vid inköpsorder uppdateringar
+  repair_updates         Boolean  @default(true) // Notifiering vid reparationsuppdateringar
+  critical_only          Boolean  @default(false) // Endast kritiska notifieringar
+  chat_mentions_push     Boolean  @default(true) // Push vid @omnämnanden i chatt
+  chat_dm_push           Boolean  @default(true) // Push vid direktmeddelanden
+  chat_all_messages_push Boolean  @default(false) // Push för alla nya meddelanden i prenumererade trådar
+  quiet_hours_enabled    Boolean  @default(true) // Tysta timmar aktiverade
+  quiet_hours_start      String   @default("22:00") // Start för tysta timmar (HH:MM)
+  quiet_hours_end        String   @default("06:00") // Slut för tysta timmar (HH:MM)
+}
+
+model Order {
+  id                        String                  @id @default(uuid())
+  createdAt                 DateTime                @default(now()) @map("created_date")
+  updatedAt                 DateTime                @updatedAt @map("updated_date")
+  order_number              String? // Ordernummer
+  customer_name             String // Kundnamn
+  customer_reference        String? // Kundreferens
+  fortnox_customer_number   String? // Fortnox kundnummer
+  rm_system_id              String? // ID/referens i RM-systemet @map("rm_system_id")
+  rm_system_url             String? // Länk till ordern i RM-systemet
+  status                    OrderStatus             @default(S_LJ) // Operativ orderstatus
+  financial_status          OrderFinancial_status   @default(unbilled) // Ekonomisk status – faktureringläge
+  delivery_date             DateTime? // Önskat leveransdatum
+  delivery_address          String? // Leveransadress
+  delivery_method           OrderDelivery_method? // Leveranssätt
+  shipping_company          String? // Speditör/transportföretag
+  tracking_number           String? // Spårningsnummer för leveransen
+  shipped_date              DateTime? // Datum när ordern skickades
+  delivery_contact_name     String? // Kontaktperson vid leveransplats
+  delivery_contact_phone    String? // Telefon till kontaktperson vid leveransplats
+  installation_date         DateTime? // Installationsdatum (om annat än leverans)
+  installation_type         OrderInstallation_type? // Typ av installation
+  screen_dimensions         String? // Skärmdimensioner (Bredd x Höjd mm)
+  pixel_pitch               String? // Pixel pitch (t.ex. P2.6)
+  module_count              Float? // Antal moduler
+  critical_notes            String? // OBS / Viktigt för hela teamet (visas som gul varning i alla steg)
+  site_ids                  String[] // Kopplade siter
+  site_names                String[] // Kopplade sitenamn
+  site_visit_info           String? // Information om platsbesök
+  notes                     String? // Anteckningar
+  picked_by                 String? // Plockad av (användarens email)
+  picked_date               DateTime? // Plockdatum
+  picking_started_date      DateTime? // När plockningen startades
+  picking_started_by        String? // Vem som startade plockningen (email)
+  production_started_date   DateTime? // När produktionen startade
+  production_completed_date DateTime? // När produktionen avslutades
+  needs_ordering            Boolean                 @default(false) // Kräver beställning
+  ordering_completed        Boolean                 @default(false) // Beställning genomförd
+  ordering_notes            String? // Beställningsanteckningar
+  fortnox_invoiced          Boolean                 @default(false) // Ordern är fakturerad i Fortnox
+  fortnox_invoice_number    String? // Fakturanummer från Fortnox
+  fortnox_order_id          String? // Fortnox ordernummer @map("fortnox_order_id")
+  fortnox_document_number   String? // Fortnox dokumentnummer
+  fortnox_project_number    String? // Fortnox projektnummer
+  fortnox_project_name      String? // Fortnox projektnamn/benämning
+  invoiced_date             DateTime? // Datum när ordern fakturerades
+  invoiced_by               String? // Vem som markerade ordern som fakturerad (email)
+  is_incomplete             Boolean                 @default(false) // Order är ofullständig
+  cancellation_reason       String? // Anledning till avbokning/annullering
+  source_document_url       String? // Kundorder/PO originalfil
+  uploaded_files            Json? // Alla uppladdade filer (ritningar, platsbilder, övrigt)
+  sales_completed           Boolean                 @default(false) // Försäljning slutförd
+  project_notes             String? // Projektanteckningar från CRM
+}
+
+model OrderItem {
+  id                   String          @id @default(uuid())
+  createdAt            DateTime        @default(now()) @map("created_date")
+  updatedAt            DateTime        @updatedAt @map("updated_date")
+  order_id             String // Referens till order @map("order_id")
+  article_id           String // Referens till artikel @map("article_id")
+  article_name         String? // Artikelnamn
+  article_batch_number String? // Batch nummer (legacy alias, använd batch_number)
+  batch_number         String? // Batch nummer (normaliserat)
+  shelf_address        String? // Hyllplats
+  quantity_ordered     Float // Beställd mängd
+  quantity_picked      Float           @default(0) // Plockad mängd
+  status               OrderItemStatus @default(pending) // Status på plockrad
+}
+
+model OrderPickList {
+  id             String              @id @default(uuid())
+  createdAt      DateTime            @default(now()) @map("created_date")
+  updatedAt      DateTime            @updatedAt @map("updated_date")
+  sales_order_id String? // FK till SalesOrder/Order @map("sales_order_id")
+  order_number   String? // Ordernummer
+  customer_name  String? // Kundnamn
+  pick_items     Json? // Artiklar att plocka
+  status         OrderPickListStatus @default(pending) // Status på plockningssession
+  started_by     String? // Startad av (email)
+  started_at     DateTime? // Starttidpunkt
+  completed_by   String? // Slutförd av (email)
+  completed_at   DateTime? // Slutförandetidpunkt
+  notes          String? // Anteckningar
+}
+
+model POActivity {
+  id                String         @id @default(uuid())
+  createdAt         DateTime       @default(now()) @map("created_date")
+  updatedAt         DateTime       @updatedAt @map("updated_date")
+  purchase_order_id String // Referens till PurchaseOrder @map("purchase_order_id")
+  type              POActivityType // Typ av aktivitet
+  message           String // Meddelande eller beskrivning
+  field_name        String? // Fältnamn som ändrades (vid field_change)
+  old_value         String? // Tidigare värde
+  new_value         String? // Nytt värde
+  actor_email       String? // Vem som utförde åtgärden
+  actor_name        String? // Namn på aktören
+  is_decision       Boolean        @default(false) // Om detta är ett markerat beslut
+  decision_reason   String? // Motivering till beslutet
+  file_url          String? // Länk till uppladdad fil
+  file_name         String? // Filnamn
+  metadata          Json? // Extra data
+}
+
+model PatternInferenceLog {
+  id               String                          @id @default(uuid())
+  createdAt        DateTime                        @default(now()) @map("created_date")
+  updatedAt        DateTime                        @updatedAt @map("updated_date")
+  started_at       DateTime? // Starttidpunkt
+  duration_ms      Float? // Körtid i millisekunder
+  samples_analyzed Float? // Antal batcher analyserade
+  patterns_found   Float? // Antal mönster som hittades
+  rules_created    Float? // Antal nya regler skapade
+  rules_updated    Float? // Antal regler uppdaterade
+  triggered_by     PatternInferenceLogTriggered_by @default(manual) // Vad som triggade körningen
+}
+
+model ProductionActivity {
+  id              String                 @id @default(uuid())
+  createdAt       DateTime               @default(now()) @map("created_date")
+  updatedAt       DateTime               @updatedAt @map("updated_date")
+  order_id        String // Referens till Order (production) @map("order_id")
+  type            ProductionActivityType // Typ av aktivitet
+  message         String // Meddelande eller beskrivning
+  field_name      String? // Fältnamn som ändrades
+  old_value       String? // Tidigare värde
+  new_value       String? // Nytt värde
+  actor_email     String? // Vem som utförde åtgärden
+  actor_name      String? // Namn på aktören
+  is_decision     Boolean                @default(false) // Om detta är ett markerat beslut
+  decision_reason String? // Motivering till beslutet
+  file_url        String? // Länk till uppladdad fil
+  file_name       String? // Filnamn
+  metadata        Json? // Extra data
+}
+
+model ProductionRecord {
+  id                   String                            @id @default(uuid())
+  createdAt            DateTime                          @default(now()) @map("created_date")
+  updatedAt            DateTime                          @updatedAt @map("updated_date")
+  order_id             String // Referens till order/projekt @map("order_id")
+  article_id           String? // FK till Article @map("article_id")
+  batch_id             String? // FK till Batch @map("batch_id")
+  label_scan_ids       String[] // Scanningar av serienummer
+  batch_analysis_ids   String[] // Kvalitetstester kopplade till produktionen
+  serial_number        String? // Slutgiltigt serienummer när monterad
+  production_status    ProductionRecordProduction_status @default(started) // Status i produktionen
+  assembly_date        DateTime? // Monteringsdatum
+  responsible_person   String? // Ansvarig montör (email)
+  responsible_name     String? // Montörens namn
+  notes                String? // Kommentarer från produktion
+  deviations           String? // Avvikelser som upptäckts
+  assembly_images      String[] // Bilder på färdigmonterad enhet
+  serial_number_images String[] // LEGACY upload-fält. Nya serienummerfoton skapar LabelScan via scanAndProcess med context='production'.
+  checklist            Json? // Produktionschecklista
+  test_results         String? // Testresultat och protokoll
+  completed_date       DateTime? // När produktionen avslutades
+}
+
+model ProjectExpense {
+  id            String               @id @default(uuid())
+  createdAt     DateTime             @default(now()) @map("created_date")
+  updatedAt     DateTime             @updatedAt @map("updated_date")
+  projectNumber String // Projektnummer
+  date          DateTime // Datum för utgiften
+  type          ProjectExpenseType // Typ av utgift
+  distanceKm    Float? // Antal km körda
+  description   String? // Beskrivning
+  driverName    String? // Förarens namn
+  vehicleReg    String? // Fordons registreringsnummer
+  costSEK       Float // Kostnad i SEK
+  source        ProjectExpenseSource @default(manual) // Källa för posten
+  reporter      String? // Rapportör (email)
+}
+
+model ProjectLink {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now()) @map("created_date")
+  updatedAt     DateTime @updatedAt @map("updated_date")
+  projectNumber String // Fortnox projektnummer
+  wsProjectId   String // Workspace projekt-ID
+  wsProjectName String? // Workspace projektnamn
+}
+
+model ProjectTime {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now()) @map("created_date")
+  updatedAt     DateTime @updatedAt @map("updated_date")
+  projectNumber String // Projektnummer
+  projectName   String? // Projektnamn
+  date          DateTime // Datum för tidsposter
+  hours         Float // Antal timmar loggade
+  description   String? // Beskrivning av arbete
+  reporter      String? // Vem som loggade tiden
+  hourlyRate    Float    @default(0) // Timkostnad kr/h
+}
+
+model PurchaseOrder {
+  id                        String                                @id @default(uuid())
+  createdAt                 DateTime                              @default(now()) @map("created_date")
+  updatedAt                 DateTime                              @updatedAt @map("updated_date")
+  po_number                 String? // Purchase Order nummer
+  intern_reference          String? // Intern referens (skickas som ourReference till Fortnox)
+  supplier_id               String? // Referens till leverantör @map("supplier_id")
+  supplier_name             String // Leverantörens namn
+  warehouse_id              String? // Referens till lager @map("warehouse_id")
+  warehouse_name            String? // Lagernamn
+  purchase_type             PurchaseOrderPurchase_type? // Typ av inköp
+  customer_reference        String? // Kundnamn eller referens
+  payment_terms             PurchaseOrderPayment_terms? // Betalningsvillkor
+  delivery_terms            PurchaseOrderDelivery_terms? // Leveransvillkor (Incoterms)
+  mode_of_transport         PurchaseOrderMode_of_transport? // Transportsätt
+  cost_center               PurchaseOrderCost_center? // Kostnadsställe (Fortnox)
+  fortnox_project_number    String? // Projektnummer Fortnox
+  fortnox_incoming_goods_id String? // Fortnox inleverans-ID (GoodsReceiptNumber) @map("fortnox_incoming_goods_id")
+  fortnox_po_id             String? // Fortnox DocumentNumber för leverantörsorder @map("fortnox_po_id")
+  fortnox_po_sync_status    PurchaseOrderFortnox_po_sync_status   @default(not_synced) // Synkstatus för leverantörsorder i Fortnox
+  fortnox_po_synced_at      DateTime? // Tidpunkt för senaste lyckade synk till Fortnox
+  fortnox_po_sync_error     String? // Felmeddelande om synk misslyckades
+  status                    PurchaseOrderStatus                   @default(draft) // Status på inköpsordern
+  invoice_number            String? // Fakturanummer från leverantör
+  invoice_amount            Float? // Fakturabelopp
+  invoice_currency          PurchaseOrderInvoice_currency         @default(SEK) // Valuta
+  invoice_file_url          String? // URL till uppladdad faktura
+  expected_delivery_date    DateTime? // Förväntat leveransdatum (ETA)
+  confirmed_delivery_date   DateTime? // Bekräftat leveransdatum från leverantör
+  delivery_method           PurchaseOrderDelivery_method? // Leveranssätt
+  shipping_company          String? // Speditör/transportföretag
+  shipping_cost             Float? // Leveranskostnad (SEK)
+  tracking_number           String? // Spårningsnummer
+  order_date                DateTime? // Orderdatum
+  sent_date                 DateTime? // När ordern skickades till leverantören
+  confirmed_date            DateTime? // När leverantören bekräftade ordern
+  shipped_date              DateTime? // När leveransen skickades
+  received_date             DateTime? // Mottagningsdatum
+  received_by               String? // Mottagen av (användarens email)
+  supplier_comments         String? // Kommentarer från leverantören
+  total_cost                Float? // Total kostnad
+  notes                     String? // Anteckningar
+  supplier_portal_token     String? // Unikt token för leverantörsåtkomst
+  documentation_status      PurchaseOrderDocumentation_status     @default(incomplete) // Status på dokumentation från leverantör
+  payment_percentage_sent   PurchaseOrderPayment_percentage_sent? // Betalningsandel skickad till ekonomi (20%, 50% eller 100%)
+  sent_for_payment_date     DateTime? // Datum och tid när ordern skickades för betalning till ekonomi
+  sent_for_payment_by       String? // Vem som skickade för betalning (email)
+  payment_log               Json? // Logg över skickade betalningar till ekonomi
+}
+
+model PurchaseOrderItem {
+  id                     String                  @id @default(uuid())
+  createdAt              DateTime                @default(now()) @map("created_date")
+  updatedAt              DateTime                @updatedAt @map("updated_date")
+  purchase_order_id      String // Referens till inköpsorder @map("purchase_order_id")
+  article_id             String? // Referens till artikel @map("article_id")
+  article_name           String? // Artikelnamn
+  article_sku            String? // Artikelnummer (SKU)
+  article_batch_number   String? // Batch nummer (legacy alias, använd batch_number)
+  batch_number           String? // Batch nummer (normaliserat)
+  quantity_ordered       Float // Beställd mängd
+  quantity_confirmed     Float? // Bekräftad mängd från leverantör
+  quantity_received      Float                   @default(0) // Mottagen mängd
+  supplier_batch_numbers Json? // Leverantörens batchnummer per leverans
+  unit_price             Float? // Enhetspris
+  status                 PurchaseOrderItemStatus @default(pending) // Status på rad
+  supplier_comment       String? // Kommentar från leverantör
+  warranty_period_months Float? // Garantitid i månader (anges av leverantör)
+  source_created_by_po   Boolean                 @default(false) // Om artikeln skapades automatiskt av denna PO-rad
+}
+
+model ReceivingRecord {
+  id                     String   @id @default(uuid())
+  createdAt              DateTime @default(now()) @map("created_date")
+  updatedAt              DateTime @updatedAt @map("updated_date")
+  purchase_order_id      String // Referens till inköpsorder @map("purchase_order_id")
+  purchase_order_item_id String // Referens till inköpsorderrad @map("purchase_order_item_id")
+  article_id             String? // Referens till artikel @map("article_id")
+  article_name           String? // Artikelnamn
+  quantity_received      Float // Mottagen kvantitet
+  shelf_address          String? // Lagerplats där varorna placerats
+  quality_check_passed   Boolean  @default(false) // Om kvalitetskontroll utförts
+  has_discrepancy        Boolean  @default(false) // Om det finns avvikelser
+  discrepancy_reason     String? // Anledning till avvikelse
+  image_urls             String[] // LEGACY upload-fält. Nya bilder ska skapas via scanAndProcess som producerar LabelScan + Batch. Denna fält läses fortfarande men bör inte skrivas till direkt.
+  notes                  String? // Anteckningar om mottagningen
+  received_by            String? // Vem som mottog varorna (email)
+  batch_ids              String[] // Referens till Batch-poster
+  ai_scan_ids            String[] // Referens till LabelScan-poster
+  high_risk_batch_count  Float    @default(0) // Antal högriskbatcher
+}
+
+model RepairLog {
+  id                   String          @id @default(uuid())
+  createdAt            DateTime        @default(now()) @map("created_date")
+  updatedAt            DateTime        @updatedAt @map("updated_date")
+  article_id           String // Referens till artikeln @map("article_id")
+  article_name         String? // Artikelnamn (för enklare sökning)
+  article_batch_number String? // Batch nummer (legacy alias, använd batch_number)
+  batch_number         String? // Batch nummer (normaliserat)
+  batch_id             String? // Referens till Batch-post @map("batch_id")
+  label_scan_id        String? // Scan av etikett när hemkommen del togs emot @map("label_scan_id")
+  batch_analysis_ids   String[] // Diagnoser under reparation
+  return_scan_required Boolean         @default(true) // Kräver scanning vid mottagning
+  repair_date_start    DateTime // Datum då reparationen påbörjades
+  repair_date_end      DateTime? // Datum då reparationen avslutades/artikeln återfördes
+  notes                String? // Anteckningar om reparationen
+  status               RepairLogStatus @default(in_progress) // Status för reparationen
+  returned_quantity    Float           @default(0) // Antal returnerade till lager
+  discarded_quantity   Float           @default(0) // Antal kasserade
+  processed_by         String? // Användaren som hanterade reparationen (email)
+}
+
+model ScanMatchAudit {
+  id                          String                  @id @default(uuid())
+  createdAt                   DateTime                @default(now()) @map("created_date")
+  updatedAt                   DateTime                @updatedAt @map("updated_date")
+  label_scan_id               String // FK till LabelScan @map("label_scan_id")
+  identifiers_searched        String[] // Alla identifierare (OCR + barcode-varianter + canonicals) som söktes
+  matches_found               Json? // Alla träffar som hittades
+  decision                    ScanMatchAuditDecision? // Vilket beslut togs
+  confidence                  Float? // Kombinerad confidence vid beslutet
+  pattern_rules_applied       String[] // IDs på BatchPatternRules som matchade
+  supplier_inferred_from_rule String? // Leverantörsnamn infererat från mönsterregel
+  timestamp                   DateTime?
+  duration_ms                 Float? // Körtid för findExistingMatches i ms
+  actor                       String? // Email på den som triggade scanningen
+}
+
+model ServiceLog {
+  id               String                  @id @default(uuid())
+  createdAt        DateTime                @default(now()) @map("created_date")
+  updatedAt        DateTime                @updatedAt @map("updated_date")
+  article_id       String // FK till Article (required) @map("article_id")
+  batch_id         String? // FK till Batch @map("batch_id")
+  serial_number    String? // Serienummer
+  service_type     ServiceLogService_type? // Typ av service
+  performed_by     String? // Utförd av (email)
+  performed_at     DateTime? // Utförandetidpunkt
+  duration_minutes Float? // Tidsåtgång i minuter
+  checklist        Json? // Servicecheck-lista
+  parts_replaced   Json? // Utbytta delar
+  findings         String? // Fynd och observationer
+  recommendations  String? // Rekommendationer
+  next_service_due DateTime? // Nästa servicetillfälle
+  label_scan_id    String? // FK till LabelScan @map("label_scan_id")
+  status           ServiceLogStatus        @default(completed) // Status
+}
+
+model SiteReport {
+  id                   String           @id @default(uuid())
+  createdAt            DateTime         @default(now()) @map("created_date")
+  updatedAt            DateTime         @updatedAt @map("updated_date")
+  site_name            String // Plats/site namn
+  site_address         String? // Adress till site
+  rm_service_id        String? // RM Install/Service ID @map("rm_service_id")
+  technician_name      String? // Teknikerens namn
+  technician_email     String? // Teknikerens email
+  report_date          DateTime // Datum för site-besök
+  status               SiteReportStatus @default(pending_review) // Status på rapporten
+  summary              String? // AI-genererad sammanfattning av rapporten för snabb överblick
+  batch_ids            String[] // Alla batcher som berörs på denna site (uppdateras automatiskt när SiteReportImages länkas)
+  batch_analysis_ids   String[] // Diagnoser/inspektioner från besöket
+  notes                String? // Anteckningar från teknikern
+  gps_latitude         Float? // GPS-latitud
+  gps_longitude        Float? // GPS-longitud
+  linked_order_id      String? // Kopplad order-ID @map("linked_order_id")
+  reviewed_by          String? // Vem som granskat rapporten (email)
+  reviewed_date        DateTime? // När rapporten granskades
+  problem_description  String? // Beskrivning av problem som kunden rapporterat
+  solution_description String? // Beskrivning av åtgärd/lösning
+  parts_replaced       Json? // Lista över utbytta delar
+}
+
+model SiteReportImage {
+  id                 String                          @id @default(uuid())
+  createdAt          DateTime                        @default(now()) @map("created_date")
+  updatedAt          DateTime                        @updatedAt @map("updated_date")
+  site_report_id     String // Referens till site-rapport @map("site_report_id")
+  image_url          String // Bild-URL från site
+  image_description  String? // AI-genererad beskrivning av bilden
+  matched_article_id String? // Matchad artikel-ID @map("matched_article_id")
+  match_confidence   Float? // Matchningssäkerhet (0-1)
+  match_status       SiteReportImageMatch_status     @default(pending) // Status på matchningen
+  batch_id           String? // FK till Batch (när matchning bekräftats) @map("batch_id")
+  label_scan_id      String? // FK till LabelScan om bilden gick genom AI-scanner @map("label_scan_id")
+  batch_analysis_id  String? // FK till BatchAnalysis om diagnos skrevs @map("batch_analysis_id")
+  component_status   SiteReportImageComponent_status @default(documented) // Status på komponenten
+  confirmed_by       String? // Vem som bekräftade matchningen
+  form_data          Json? // Dynamisk formulärdata baserat på artikeltyp
+  replaced           Boolean                         @default(false) // Om komponenten byttes ut
+  replacement_date   DateTime? // Datum för byte
+  old_batch_number   String? // Batch nummer på gamla komponenten
+  new_batch_number   String? // Batch nummer på nya komponenten
+}
+
+model StockAdjustment {
+  id              String                          @id @default(uuid())
+  createdAt       DateTime                        @default(now()) @map("created_date")
+  updatedAt       DateTime                        @updatedAt @map("updated_date")
+  article_id      String // FK till Article (required) @map("article_id")
+  batch_id        String? // FK till Batch (valfritt) @map("batch_id")
+  adjustment_type StockAdjustmentAdjustment_type? // Typ av justering
+  quantity_before Float? // Saldo före justering
+  quantity_after  Float? // Saldo efter justering
+  quantity_delta  Float? // Förändring (positiv eller negativ)
+  reason          StockAdjustmentReason? // Anledning till justering
+  reason_notes    String? // Fritext-kommentar till anledning
+  label_scan_id   String? // FK till LabelScan (valfritt) @map("label_scan_id")
+  adjusted_by     String? // Justerad av (email)
+  adjusted_at     DateTime? // Justeringstidpunkt
+  approved_by     String? // Godkänd av (email, valfritt för större justeringar)
+}
+
+model Supplier {
+  id                      String   @id @default(uuid())
+  createdAt               DateTime @default(now()) @map("created_date")
+  updatedAt               DateTime @updatedAt @map("updated_date")
+  name                    String // Leverantörens namn
+  fortnox_supplier_number String? // Fortnox leverantörsnummer (krävs för Fortnox-sync)
+  contact_person          String? // Kontaktperson
+  email                   String? // E-postadress
+  phone                   String? // Telefonnummer
+  address                 String? // Adress
+  website                 String? // Webbsida
+  standard_delivery_days  Float    @default(7) // Standard leveranstid i dagar
+  notes                   String? // Anteckningar
+  is_active               Boolean  @default(true) // Om leverantören är aktiv
+}
+
+model SupplierLabelPattern {
+  id                            String    @id @default(uuid())
+  createdAt                     DateTime  @default(now()) @map("created_date")
+  updatedAt                     DateTime  @updatedAt @map("updated_date")
+  supplier_id                   String // Referens till leverantör @map("supplier_id")
+  supplier_name                 String? // Leverantörsnamn
+  batch_prefix_patterns         String[] // Kända prefix-mönster för batchnummer
+  batch_length_distribution     Json? // Fördelning av batchnummerlängder
+  batch_regex                   String? // Härlett regex för batchnummer
+  label_layout_fingerprint      String? // Fingeravtryck för etikettlayout
+  sample_count                  Float     @default(0) // Antal prover som mönstret baseras på
+  last_updated                  DateTime? // Senast uppdaterad
+  confidence_threshold_override Float? // Leverantörsspecifikt confidence-tröskelvärde
+}
+
+model SyncLog {
+  id                String            @id @default(uuid())
+  createdAt         DateTime          @default(now()) @map("created_date")
+  updatedAt         DateTime          @updatedAt @map("updated_date")
+  sync_type         String // Typ av synk (t.ex. articles_from_fortnox, purchase_order_to_fortnox)
+  status            SyncLogStatus // Resultatstatus
+  entity_type       String? // Entitetstyp som synkades (t.ex. PurchaseOrder)
+  entity_id         String? // ID på entiteten som synkades @map("entity_id")
+  direction         SyncLogDirection? // Synkningsriktning
+  records_processed Float? // Antal poster behandlade
+  records_created   Float? // Antal poster skapade
+  records_updated   Float? // Antal poster uppdaterade
+  records_skipped   Float? // Antal poster hoppade över
+  error_message     String? // Felmeddelande om synken misslyckades
+  error_detail      String? // Detaljerat felmeddelande
+  duration_ms       Float? // Körtid i millisekunder
+  details           Json? // Extra detaljer om synken
+  triggered_by      String? // Vem som triggade synken (email eller 'system')
+}
+
+model SystemAutomation {
+  id              String                           @id @default(uuid())
+  createdAt       DateTime                         @default(now()) @map("created_date")
+  updatedAt       DateTime                         @updatedAt @map("updated_date")
+  automation_type SystemAutomationAutomation_type? // Typ av automation
+  is_enabled      Boolean                          @default(true) // Om automationen är aktiverad
+  config          Json? // Konfigurationsobjekt
+  last_run_at     DateTime? // Senaste körning
+  next_run_at     DateTime? // Nästa planerade körning
+  notes           String? // Anteckningar
+}
+
+model Task {
+  id               String       @id @default(uuid())
+  createdAt        DateTime     @default(now()) @map("created_date")
+  updatedAt        DateTime     @updatedAt @map("updated_date")
+  name             String // Uppgiftens titel
+  priority         TaskPriority @default(normal) // Prioritet
+  assigned_to      String? // Tilldelad (email)
+  assigned_to_name String? // Tilldelad (namn)
+  description      String? // Beskrivning av uppgiften
+  status           TaskStatus   @default(to_do) // Status
+  phase            TaskPhase? // Vilken fas i flödet tasken tillhör
+  role             TaskRole? // Vilken roll som utför uppgiften
+  order_id         String? // Referens till Order @map("order_id")
+  work_order_id    String? // Referens till WorkOrder @map("work_order_id")
+  due_date         DateTime? // Klart senast
+  notes            String? // Anteckningar
+}
+
+model TaskTemplate {
+  id                     String                       @id @default(uuid())
+  createdAt              DateTime                     @default(now()) @map("created_date")
+  updatedAt              DateTime                     @updatedAt @map("updated_date")
+  name                   String // Mall-namn
+  phase                  TaskTemplatePhase? // Fas i flödet
+  trigger_event          TaskTemplateTrigger_event? // Händelse som triggar skapande av Task
+  default_role           TaskTemplateDefault_role? // Roll som utför uppgiften
+  auto_assign_rule       TaskTemplateAuto_assign_rule @default(assigned_to_field) // Regel för auto-tilldelning
+  assigned_to_field_name String? // T.ex. 'assigned_to_lager' om auto_assign_rule = assigned_to_field
+  specific_user_email    String? // Email om auto_assign_rule = specific_user
+  title_template         String? // T.ex. 'Plocka material för {order_number}'
+  description_template   String? // Beskrivningsmall med variabler
+  due_days_offset        Float? // Dagar från triggerhändelse till deadline
+  priority               TaskTemplatePriority         @default(normal) // Prioritet
+  is_active              Boolean                      @default(true) // Om mallen är aktiv
+  notes                  String? // Anteckningar
+}
+
+model User {
+  id                 String   @id @default(uuid())
+  createdAt          DateTime @default(now()) @map("created_date")
+  updatedAt          DateTime @updatedAt @map("updated_date")
+  allowed_modules    String[] // Moduler användaren har tillgång till
+  is_active          Boolean  @default(true) // Om användaren är aktiv eller inaktiverad
+  role               UserRole @default(lager) // Primär roll — styr startsida och rättigheter
+  secondary_roles    String[] // Sekundära roller — ger åtkomst utan att ändra startsida
+  home_page_override String? // Valfri custom startsida istället för /home/{role}
+  mobile_preferred   Boolean  @default(false) // Användaren föredrar mobilvyn
+}
+
+model Warehouse {
+  id                       String   @id @default(uuid())
+  createdAt                DateTime @default(now()) @map("created_date")
+  updatedAt                DateTime @updatedAt @map("updated_date")
+  name                     String // Namn på lagerställe (t.ex. Huvudlager, Lager A)
+  code                     String? // Kort kod för lagret (t.ex. HL, LA)
+  address                  String? // Fysisk adress till lagret
+  contact_person           String? // Kontaktperson för lagret
+  fortnox_stock_point_code String? // Fortnox lagerställekod (StockPointCode)
+  is_active                Boolean  @default(true) // Om lagret är aktivt
+  notes                    String? // Anteckningar om lagret
+}
+
+model WorkOrder {
+  id                            String                      @id @default(uuid())
+  createdAt                     DateTime                    @default(now()) @map("created_date")
+  updatedAt                     DateTime                    @updatedAt @map("updated_date")
+  order_id                      String // Referens till Order @map("order_id")
+  order_number                  String? // Ordernummer (kopierat från Order)
+  name                          String? // Arbetsordens namn/titel
+  customer_name                 String? // Kundnamn (kopierat från Order)
+  customer_reference            String? // Kundreferens
+  fortnox_customer_number       String? // Fortnox kundnummer
+  fortnox_project_number        String? // Fortnox projektnummer
+  fortnox_project_name          String? // Fortnox projektnamn
+  fortnox_order_id              String? // Fortnox ordernummer @map("fortnox_order_id")
+  fortnox_document_number       String? // Fortnox dokumentnummer
+  source_document_url           String? // Källdokument (PO/offert PDF)
+  delivery_date                 DateTime? // Leveransdatum
+  delivery_address              String? // Leveransadress
+  delivery_method               String? // Leveranssätt
+  shipping_company              String? // Speditör
+  delivery_contact_name         String? // Leveranskontakt namn
+  delivery_contact_phone        String? // Leveranskontakt telefon
+  installation_date             DateTime? // Installationsdatum
+  installation_type             WorkOrderInstallation_type? // Typ av installation
+  screen_dimensions             String? // Skärmdimensioner
+  pixel_pitch                   String? // Pixel pitch
+  module_count                  Float? // Antal moduler
+  config_cols                   Float? // Moduler horisontellt
+  config_rows                   Float? // Moduler vertikalt
+  product_name                  String? // Produktnamn
+  quote_items                   Json? // Offertsammanställning från CRM
+  critical_notes                String? // Kritisk information / OBS (visas som gul varning)
+  site_ids                      String[] // Kopplade siter
+  site_names                    String[] // Kopplade sitenamn
+  site_visit_info               String? // Information om platsbesök
+  rm_system_id                  String? // ID i RM-systemet @map("rm_system_id")
+  rm_system_url                 String? // Länk till ordern i RM-systemet
+  current_stage                 WorkOrderCurrent_stage      @default(konstruktion) // Nuvarande fas
+  status                        WorkOrderStatus             @default(v_ntande)
+  tasks                         Json?
+  assigned_to_konstruktion      String?
+  assigned_to_konstruktion_name String?
+  assigned_to_produktion        String?
+  assigned_to_produktion_name   String?
+  assigned_to_lager             String?
+  assigned_to_lager_name        String?
+  assigned_to_montering         String?
+  assigned_to_montering_name    String?
+  assigned_to_leverans          String?
+  assigned_to_leverans_name     String?
+  technician_name               String?
+  technician_phone              String?
+  project_description           String?
+  picking_started_date          DateTime?
+  picking_completed_date        DateTime?
+  production_started_date       DateTime?
+  production_completed_date     DateTime?
+  production_status             WorkOrderProduction_status  @default(p_b_rjad)
+  checklist                     Json?
+  assembly_images               String[]
+  deviations                    String?
+  picking_notes                 String?
+  production_notes              String?
+  priority                      WorkOrderPriority           @default(normal)
+  drawing_url                   String?
+  bill_of_materials_url         String?
+  materials_needed              Json?
+  all_materials_ready           Boolean                     @default(false)
+  quality_report_url            String?
+  test_protocol_url             String?
+  needs_procurement             Boolean                     @default(false)
+  planned_start_date            DateTime?
+  planned_deadline              DateTime?
+  signed_off_by                 String?
+  signed_off_date               DateTime?
+  total_items                   Float?
+  total_weight_kg               Float?
+  total_volume_m3               Float?
+  uploaded_files                Json?
+  project_notes                 String? // Projektanteckningar från CRM (PROJEKTANTECKNINGAR)
+  workorder_notes               String? // Interna anteckningar från CRM WorkOrder
+  workorder_title               String? // Arbetsorderns titel i CRM
+  workorder_description         String? // Arbetsorderbeskrivning från CRM
+  role_sections                 Json? // Roll-sektioner: {construction, project, it} med notes och checklist per roll
+  construction_lead_name        String? // Ansvarig konstruktör (namn)
+  project_lead_name             String? // Ansvarig projektledare (namn)
+  it_lead_name                  String? // Ansvarig IT (namn)
+}
+
+model WorkOrderActivity {
+  id              String                @id @default(uuid())
+  createdAt       DateTime              @default(now()) @map("created_date")
+  updatedAt       DateTime              @updatedAt @map("updated_date")
+  work_order_id   String // Referens till WorkOrder @map("work_order_id")
+  type            WorkOrderActivityType // Typ av aktivitet
+  message         String // Meddelande eller beskrivning
+  field_name      String? // Fältnamn som ändrades
+  old_value       String? // Tidigare värde
+  new_value       String? // Nytt värde
+  actor_email     String? // Vem som utförde åtgärden
+  actor_name      String? // Namn på aktören
+  is_decision     Boolean               @default(false) // Om detta är ett markerat beslut
+  decision_reason String? // Motivering till beslutet
+  file_url        String? // Länk till uppladdad fil
+  file_name       String? // Filnamn
+  metadata        Json? // Extra data
+}

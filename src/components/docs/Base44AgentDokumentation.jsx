@@ -1,0 +1,1 @@
+export default function Base44AgentDokumentationMd() { return null; }

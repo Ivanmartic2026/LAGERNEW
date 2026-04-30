@@ -1,0 +1,89 @@
+{
+  "name": "DrivingJournalEntry",
+  "type": "object",
+  "properties": {
+    "projectNumber": {
+      "type": "string",
+      "description": "Projektnummer"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Datum f\u00f6r resan"
+    },
+    "driverName": {
+      "type": "string",
+      "description": "F\u00f6rarens namn"
+    },
+    "fromLocation": {
+      "type": "string",
+      "description": "Startplats (fritext)"
+    },
+    "toLocation": {
+      "type": "string",
+      "description": "Destination (fritext)"
+    },
+    "fromAddress": {
+      "type": "string",
+      "description": "Startadress (strukturerad adress)"
+    },
+    "toAddress": {
+      "type": "string",
+      "description": "Destinationsadress (strukturerad adress)"
+    },
+    "fromLat": {
+      "type": "number",
+      "description": "Startplats latitud"
+    },
+    "fromLng": {
+      "type": "number",
+      "description": "Startplats longitud"
+    },
+    "toLat": {
+      "type": "number",
+      "description": "Destination latitud"
+    },
+    "toLng": {
+      "type": "number",
+      "description": "Destination longitud"
+    },
+    "startTime": {
+      "type": "string",
+      "description": "Starttid (ISO-str\u00e4ng)"
+    },
+    "endTime": {
+      "type": "string",
+      "description": "Stopptid (ISO-str\u00e4ng)"
+    },
+    "distanceKm": {
+      "type": "number",
+      "description": "K\u00f6rstr\u00e4cka i km"
+    },
+    "purpose": {
+      "type": "string",
+      "description": "Syfte med resan"
+    },
+    "vehicleReg": {
+      "type": "string",
+      "description": "Fordonets registreringsnummer"
+    },
+    "reporter": {
+      "type": "string",
+      "description": "Rapport\u00f6r (email)"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "imworkspace",
+        "manual"
+      ],
+      "default": "manual",
+      "description": "K\u00e4lla f\u00f6r posten"
+    }
+  },
+  "required": [
+    "projectNumber",
+    "date",
+    "distanceKm"
+  ]
+}

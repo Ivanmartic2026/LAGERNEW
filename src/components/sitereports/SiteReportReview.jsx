@@ -1,0 +1,714 @@
+import React, { useState } from 'react';
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  ArrowLeft, Loader2, CheckCircle2, XCircle, AlertTriangle,
+  Package, MapPin, Wrench, Camera, FileText, Download, ExternalLink
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { sv } from "date-fns/locale";
+import SwipeNavigation from "@/components/utils/SwipeNavigation";
+import { LazyImage } from "@/components/utils/MobileOptimized";
+import DOMPurify from 'dompurify';
+
+export default function SiteReportReview({ report, onBack }) {
+   const [processing, setProcessing] = useState(false);
+   const [editingOrder, setEditingOrder] = useState(false);
+   const queryClient = useQueryClient();
+
+  const { data: images = [], isLoading: imagesLoading } = useQuery({
+    queryKey: ['siteReportImages', report.id],
+    queryFn: () => base44.entities.SiteReportImage.filter({ site_report_id: report.id })
+  });
+
+  const { data: articles = [] } = useQuery({
+    queryKey: ['articles'],
+    queryFn: () => base44.entities.Article.list()
+  });
+
+  const { data: allOrders = [] } = useQuery({
+    queryKey: ['allOrders'],
+    queryFn: () => base44.entities.Order.list('-created_date')
+  });
+
+  const { data: orderItems = [] } = useQuery({
+    queryKey: ['orderItems', report.linked_order_id],
+    queryFn: () => report.linked_order_id 
+      ? base44.entities.OrderItem.filter({ order_id: report.linked_order_id })
+      : [],
+    enabled: !!report.linked_order_id
+  });
+
+  const runMatchingMutation = useMutation({
+    mutationFn: async () => {
+      const result = await base44.functions.invoke('matchSiteImages', {
+        site_report_id: report.id
+      });
+      return result.data;
+    },
+    onSuccess: (data) => {
+      toast.success(`Matchade ${data.matches?.length || 0} bilder`);
+      queryClient.invalidateQueries({ queryKey: ['siteReportImages', report.id] });
+    },
+    onError: (error) => {
+      toast.error('Matchning misslyckades: ' + error.message);
+    }
+  });
+
+  const confirmMatchMutation = useMutation({
+    mutationFn: async ({ imageId, formData }) => {
+      await base44.entities.SiteReportImage.update(imageId, {
+        match_status: 'confirmed',
+        confirmed_by: (await base44.auth.me()).email,
+        form_data: formData,
+        component_status: formData.component_status
+      });
+    },
+    onSuccess: () => {
+      toast.success('Matchning bekräftad');
+      queryClient.invalidateQueries({ queryKey: ['siteReportImages', report.id] });
+    }
+  });
+
+  const updateOrderMutation = useMutation({
+    mutationFn: async (orderId) => {
+      await base44.entities.SiteReport.update(report.id, {
+        linked_order_id: orderId || null
+      });
+    },
+    onSuccess: () => {
+      toast.success('Order uppdaterad');
+      setEditingOrder(false);
+    }
+  });
+
+  const handleRunMatching = async () => {
+    setProcessing(true);
+    try {
+      await runMatchingMutation.mutateAsync();
+    } catch (error) {
+      console.error('Matching error:', error);
+      toast.error('Matchning misslyckades');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      toast.info('Genererar rapport...');
+      const response = await base44.functions.invoke('exportSiteReport', {
+        report_id: report.id
+      });
+      
+      const { html, filename } = response.data;
+      
+      // Create a temporary container
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.width = '800px';
+      container.innerHTML = DOMPurify.sanitize(html);
+      document.body.appendChild(container);
+      
+      // Import html2canvas dynamically
+      const html2canvas = (await import('html2canvas')).default;
+      
+      // Convert to canvas
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+      
+      // Clean up
+      document.body.removeChild(container);
+      
+      // Convert to PNG and download
+      canvas.toBlob((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.png`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        toast.success('Rapport nedladdad som PNG');
+      }, 'image/png');
+      
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Kunde inte generera rapport');
+    }
+  };
+
+  const pendingImages = images.filter(img => img.match_status === 'pending');
+  const matchedImages = images.filter(img => img.match_status === 'matched');
+  const confirmedImages = images.filter(img => img.match_status === 'confirmed');
+
+  return (
+    <div className="min-h-screen bg-black p-3 md:p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-4 md:mb-6">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            className="text-white/70 hover:text-white mb-3 md:mb-4 -ml-2 md:ml-0"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Tillbaka
+          </Button>
+
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight mb-2 truncate">
+                {report.site_name}
+              </h1>
+              <div className="space-y-1 text-xs md:text-sm text-white/60">
+                {report.site_address && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">{report.site_address}</span>
+                  </div>
+                )}
+                <div className="truncate">
+                  Tekniker: {report.technician_name || report.technician_email}
+                </div>
+                <div>
+                  {format(new Date(report.report_date), "d MMM yyyy HH:mm", { locale: sv })}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 md:gap-2">
+              {matchedImages.length > 0 && (
+                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs md:text-sm justify-center">
+                  {matchedImages.length} redo
+                </Badge>
+              )}
+              <Button
+                onClick={handleExportPDF}
+                variant="outline"
+                className="bg-white/5 border-white/10 text-white hover:bg-white/10 text-sm md:text-base"
+                size="sm"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                <span className="hidden md:inline">Ladda ner rapport</span>
+                <span className="md:hidden">Rapport</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Linked Order Section */}
+        <div className="mb-4 md:mb-6 p-3 md:p-5 rounded-lg md:rounded-2xl bg-white/5 border border-white/10">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <h3 className="font-semibold text-sm md:text-base text-white flex items-center gap-2">
+              <Package className="w-4 md:w-5 h-4 md:h-5" />
+              <span>Order</span>
+            </h3>
+            {!editingOrder && (
+              <Button
+                onClick={() => setEditingOrder(true)}
+                variant="outline"
+                size="sm"
+                className="bg-white/5 border-white/10 text-white hover:bg-white/10 text-xs md:text-sm"
+              >
+                {report.linked_order_id ? 'Ändra' : 'Koppla'}
+              </Button>
+            )}
+          </div>
+
+          {editingOrder ? (
+            <div className="space-y-2">
+              <Select
+                value={report.linked_order_id || ''}
+                onValueChange={(value) => updateOrderMutation.mutate(value || null)}
+              >
+                <SelectTrigger className="bg-zinc-900 border-white/10 text-white text-sm">
+                  <SelectValue placeholder="Välj order..." />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-white/10 text-white max-h-[200px]">
+                  <SelectItem value={null}>Ingen order</SelectItem>
+                  {allOrders.map(order => (
+                    <SelectItem key={order.id} value={order.id}>
+                      {order.order_number || order.customer_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={() => setEditingOrder(false)}
+                variant="ghost"
+                size="sm"
+                className="text-white/50 hover:text-white text-xs"
+              >
+                Avbryt
+              </Button>
+            </div>
+          ) : (
+            <div>
+              {report.linked_order_id ? (
+                <div>
+                  <div className="text-xs md:text-sm font-medium text-white mb-3 truncate">
+                    {allOrders.find(o => o.id === report.linked_order_id)?.order_number || 
+                     allOrders.find(o => o.id === report.linked_order_id)?.customer_name || 
+                     'Order hittades inte'}
+                  </div>
+                  
+                  {orderItems.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-xs font-medium text-white/50 mb-2 hidden md:block">Artiklar:</div>
+                      {orderItems.map(item => {
+                        const article = articles.find(a => a.id === item.article_id);
+                        return (
+                          <Link
+                            key={item.id}
+                            to={createPageUrl(`Inventory?articleId=${item.article_id}`)}
+                            className="flex items-center justify-between p-2 rounded text-xs md:text-sm rounded-lg bg-white/5 hover:bg-white/10 transition-colors group gap-2"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="text-white truncate">{item.article_name}</div>
+                              <div className="text-white/40 hidden md:block">
+                                {article?.sku && <span>{article.sku}</span>}
+                                {article?.sku && item.article_batch_number && <span> • </span>}
+                                {item.article_batch_number && <span>{item.article_batch_number}</span>}
+                              </div>
+                            </div>
+                            <div className="text-white/70 font-medium flex-shrink-0">
+                              {item.quantity_ordered} st
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-xs md:text-sm text-white/60">Ingen order kopplad</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-3 mb-6">
+          <div className="p-3 md:p-4 rounded-lg md:rounded-xl bg-white/5 border border-white/10">
+            <div className="text-xl md:text-2xl font-bold text-white">{images.length}</div>
+            <div className="text-xs text-white/50">Bilder</div>
+          </div>
+          <div className="p-3 md:p-4 rounded-lg md:rounded-xl bg-amber-500/10 border border-amber-500/30">
+            <div className="text-xl md:text-2xl font-bold text-amber-400">{pendingImages.length}</div>
+            <div className="text-xs text-amber-400/70">Väntar</div>
+          </div>
+          <div className="p-3 md:p-4 rounded-lg md:rounded-xl bg-blue-500/10 border border-blue-500/30">
+            <div className="text-xl md:text-2xl font-bold text-blue-400">{matchedImages.length}</div>
+            <div className="text-xs text-blue-400/70">Matchad</div>
+          </div>
+          <div className="p-3 md:p-4 rounded-lg md:rounded-xl bg-green-500/10 border border-green-500/30">
+            <div className="text-xl md:text-2xl font-bold text-green-400">{confirmedImages.length}</div>
+            <div className="text-xs text-green-400/70">Bekräftade</div>
+          </div>
+        </div>
+
+        {/* All Images Gallery - Swipeable on mobile */}
+        {images.length > 0 && (
+          <div className="mb-4 md:mb-6">
+            <h2 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4 flex items-center gap-2">
+              <Camera className="w-4 md:w-5 h-4 md:h-5" />
+              <span>Alla bilder ({images.length})</span>
+            </h2>
+            
+            {/* Mobile: Swipeable view */}
+            <div className="md:hidden">
+              <SwipeNavigation
+                items={images}
+                renderItem={(image) => (
+                  <div className="relative">
+                    <LazyImage 
+                      src={image.image_url} 
+                      alt="Site" 
+                      className="w-full h-80 rounded-2xl object-cover"
+                    />
+                    <div className="absolute top-4 right-4 flex gap-2">
+                      <button
+                        onClick={() => window.open(image.image_url, '_blank')}
+                        className="p-3 rounded-xl bg-black/50 backdrop-blur hover:bg-black/70 transition-colors"
+                      >
+                        <ExternalLink className="w-5 h-5 text-white" />
+                      </button>
+                      <a
+                        href={image.image_url}
+                        download={`site-bild-${image.id}.jpg`}
+                        className="p-3 rounded-xl bg-black/50 backdrop-blur hover:bg-black/70 transition-colors"
+                      >
+                        <Download className="w-5 h-5 text-white" />
+                      </a>
+                    </div>
+                    {image.match_status === 'confirmed' && (
+                      <div className="absolute top-4 left-4">
+                        <div className="px-3 py-1.5 rounded-full bg-green-500/20 backdrop-blur border border-green-500/30 flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-green-400" />
+                          <span className="text-sm font-medium text-green-400">Bekräftad</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              />
+            </div>
+            
+            {/* Desktop: Grid view */}
+            <div className="hidden md:grid grid-cols-4 gap-3">
+              {images.map(image => (
+                <div key={image.id} className="relative group">
+                  <LazyImage 
+                    src={image.image_url} 
+                    alt="Site" 
+                    className="w-full h-32 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                  />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(image.image_url, '_blank');
+                      }}
+                      className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                    >
+                      <ExternalLink className="w-5 h-5 text-white" />
+                    </button>
+                    <a
+                      href={image.image_url}
+                      download={`site-bild-${image.id}.jpg`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                    >
+                      <Download className="w-5 h-5 text-white" />
+                    </a>
+                  </div>
+                  {image.match_status === 'confirmed' && (
+                    <div className="absolute top-2 right-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-400 bg-black/50 rounded-full" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        {pendingImages.length > 0 && (
+          <div className="mb-4 md:mb-6">
+            <Button
+              onClick={handleRunMatching}
+              disabled={processing || runMatchingMutation.isPending}
+              className="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-sm md:text-base"
+            >
+              {processing || runMatchingMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span className="hidden md:inline">Matchar bilder...</span>
+                  <span className="md:hidden">Matchar...</span>
+                </>
+              ) : (
+                <>
+                  <Wrench className="w-4 h-4 mr-2" />
+                  <span className="hidden md:inline">Kör AI-matchning</span>
+                  <span className="md:hidden">AI-match</span>
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+
+        {/* Matched Images - Ready for Review */}
+        {matchedImages.length > 0 && (
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Redo för granskning</h2>
+            <div className="space-y-4">
+              {matchedImages.map(image => {
+                const matchedArticle = articles.find(a => a.id === image.matched_article_id);
+                return (
+                  <ImageMatchCard
+                    key={image.id}
+                    image={image}
+                    article={matchedArticle}
+                    onConfirm={(formData) => confirmMatchMutation.mutate({ 
+                      imageId: image.id, 
+                      formData 
+                    })}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Confirmed Images */}
+        {confirmedImages.length > 0 && (
+          <div>
+            <h2 className="text-lg font-semibold text-white mb-4">Bekräftade matchningar</h2>
+            <div className="space-y-2">
+              {confirmedImages.map(image => {
+                const matchedArticle = articles.find(a => a.id === image.matched_article_id);
+                return (
+                  <div key={image.id} className="p-3 md:p-4 rounded-lg md:rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3 md:gap-4">
+                    <LazyImage src={image.image_url} alt="Site" className="w-12 md:w-16 h-12 md:h-16 rounded object-cover flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm md:text-base text-white truncate">{matchedArticle?.name}</div>
+                      <div className="text-xs md:text-sm text-white/50 truncate">
+                        {image.component_status === 'ok' ? 'OK' :
+                         image.component_status === 'needs_replacement' ? 'Behöver bytas' :
+                         image.component_status === 'needs_repair' ? 'Behöver repareras' : 'Dokumenterad'}
+                      </div>
+                    </div>
+                    <CheckCircle2 className="w-4 md:w-5 h-4 md:h-5 text-green-400 flex-shrink-0" />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {imagesLoading && (
+          <div className="text-center py-8 md:py-16">
+            <Loader2 className="w-6 md:w-8 h-6 md:h-8 text-white/30 animate-spin mx-auto mb-4" />
+            <p className="text-xs md:text-base text-white/50">Laddar bilder...</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ImageMatchCard({ image, article, onConfirm }) {
+  const [formData, setFormData] = useState({
+    component_status: 'documented',
+    pixel_pitch: article?.pixel_pitch_mm || '',
+    batch_number: article?.batch_number || '',
+    mask_type: '',
+    watt: '',
+    volt: '',
+    length: '',
+    connector_type: ''
+  });
+
+  const getFormTemplate = () => {
+    if (!article) return null;
+    
+    if (article.category === 'LED Module') return 'led_module';
+    if (article.category === 'Power Supply') return 'power_supply';
+    if (article.category === 'Cable') return 'cable';
+    return 'other';
+  };
+
+  const template = getFormTemplate();
+
+  return (
+    <div className="p-4 md:p-6 rounded-xl md:rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10">
+    <div className="flex md:flex-row flex-col gap-4 md:gap-6 mb-6">
+      {/* Site Image */}
+      <div className="flex-1 min-w-0">
+        <div className="text-xs md:text-sm font-medium text-white/70 mb-2 flex items-center justify-between gap-2">
+          <span>Från site</span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => window.open(image.image_url, '_blank')}
+              className="p-1 hover:bg-white/10 rounded text-blue-400 hover:text-blue-300"
+              title="Öppna"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </button>
+            <a
+              href={image.image_url}
+              download={`site-bild-${image.id}.jpg`}
+              className="p-1 hover:bg-white/10 rounded text-blue-400 hover:text-blue-300"
+              title="Ladda ner"
+            >
+              <Download className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+        <LazyImage 
+          src={image.image_url} 
+          alt="Site" 
+          className="w-full h-40 md:h-64 rounded-lg md:rounded-xl object-cover bg-slate-900 cursor-pointer"
+          onClick={() => window.open(image.image_url, '_blank')}
+        />
+      </div>
+
+      {/* Matched Article Image */}
+      <div className="flex-1 min-w-0">
+        <div className="text-xs md:text-sm font-medium text-white/70 mb-2 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="truncate">Artikel</span>
+            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 whitespace-nowrap text-xs">
+              {Math.round(image.match_confidence * 100)}%
+            </Badge>
+          </div>
+          {(article?.image_urls?.[0] || article?.image_url) && (
+            <div className="flex gap-1">
+              <button
+                onClick={() => window.open(article?.image_urls?.[0] || article?.image_url, '_blank')}
+                className="p-1 hover:bg-white/10 rounded text-blue-400 hover:text-blue-300"
+                title="Öppna"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </button>
+              <a
+                href={article?.image_urls?.[0] || article?.image_url}
+                download={`artikel-${article?.sku || article?.id}.jpg`}
+                className="p-1 hover:bg-white/10 rounded text-blue-400 hover:text-blue-300"
+                title="Ladda ner"
+              >
+                <Download className="w-4 h-4" />
+              </a>
+            </div>
+          )}
+        </div>
+        <LazyImage 
+          src={article?.image_urls?.[0] || article?.image_url} 
+          alt={article?.name}
+          className="w-full h-40 md:h-64 rounded-lg md:rounded-xl object-cover bg-slate-900 cursor-pointer"
+          onClick={() => window.open(article?.image_urls?.[0] || article?.image_url, '_blank')}
+        />
+      </div>
+    </div>
+
+      {/* Article Info */}
+      <div className="mb-6 p-3 md:p-4 rounded-lg md:rounded-xl bg-white/5">
+        <div className="flex items-start gap-2 md:gap-3">
+          <Package className="w-4 md:w-5 h-4 md:h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+          <div className="min-w-0">
+            <div className="font-semibold text-sm md:text-base text-white truncate">{article?.name}</div>
+            {article?.batch_number && (
+              <div className="text-xs md:text-sm text-white/50">Batch: {article.batch_number}</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Dynamic Form */}
+      <div className="space-y-3 md:space-y-4 mb-6">
+        <div>
+          <label className="text-xs md:text-sm font-medium text-white/70 mb-2 block">
+            Status på komponenten
+          </label>
+          <Select 
+            value={formData.component_status} 
+            onValueChange={(value) => setFormData(prev => ({ ...prev, component_status: value }))}
+          >
+            <SelectTrigger className="bg-zinc-900 border-white/10 text-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-zinc-900 border-white/10 text-white">
+              <SelectItem value="ok">OK - Fungerar</SelectItem>
+              <SelectItem value="needs_replacement">Behöver bytas ut</SelectItem>
+              <SelectItem value="needs_repair">Behöver repareras</SelectItem>
+              <SelectItem value="documented">Endast dokumenterad</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Template-specific fields - Hidden on mobile unless expanded */}
+        {template === 'led_module' && (
+          <div className="space-y-3 hidden md:flex md:flex-col">
+            <div>
+              <label className="text-xs md:text-sm font-medium text-white/70 mb-2 block">Pixel Pitch</label>
+              <Input
+                value={formData.pixel_pitch}
+                onChange={(e) => setFormData(prev => ({ ...prev, pixel_pitch: e.target.value }))}
+                placeholder="t.ex. 2.6"
+                className="bg-zinc-900 border-white/10 text-white text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs md:text-sm font-medium text-white/70 mb-2 block">Mask-typ</label>
+              <Input
+                value={formData.mask_type}
+                onChange={(e) => setFormData(prev => ({ ...prev, mask_type: e.target.value }))}
+                placeholder="t.ex. SMD"
+                className="bg-zinc-900 border-white/10 text-white text-sm"
+              />
+            </div>
+          </div>
+        )}
+
+        {template === 'power_supply' && (
+          <div className="space-y-3 hidden md:flex md:flex-col">
+            <div>
+              <label className="text-xs md:text-sm font-medium text-white/70 mb-2 block">Watt</label>
+              <Input
+                value={formData.watt}
+                onChange={(e) => setFormData(prev => ({ ...prev, watt: e.target.value }))}
+                placeholder="t.ex. 500W"
+                className="bg-zinc-900 border-white/10 text-white text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs md:text-sm font-medium text-white/70 mb-2 block">Volt</label>
+              <Input
+                value={formData.volt}
+                onChange={(e) => setFormData(prev => ({ ...prev, volt: e.target.value }))}
+                placeholder="t.ex. 12V"
+                className="bg-zinc-900 border-white/10 text-white text-sm"
+              />
+            </div>
+          </div>
+        )}
+
+        {template === 'cable' && (
+          <div className="space-y-3 hidden md:flex md:flex-col">
+            <div>
+              <label className="text-xs md:text-sm font-medium text-white/70 mb-2 block">Längd</label>
+              <Input
+                value={formData.length}
+                onChange={(e) => setFormData(prev => ({ ...prev, length: e.target.value }))}
+                placeholder="t.ex. 5m"
+                className="bg-zinc-900 border-white/10 text-white text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs md:text-sm font-medium text-white/70 mb-2 block">Kontakttyp</label>
+              <Input
+                value={formData.connector_type}
+                onChange={(e) => setFormData(prev => ({ ...prev, connector_type: e.target.value }))}
+                placeholder="t.ex. RJ45"
+                className="bg-zinc-900 border-white/10 text-white text-sm"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2 md:gap-3">
+        <Button
+          onClick={() => onConfirm(formData)}
+          className="flex-1 bg-green-600 hover:bg-green-500 text-sm md:text-base"
+        >
+          <CheckCircle2 className="w-4 h-4 mr-2" />
+          Bekräfta
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10 text-sm md:text-base"
+        >
+          <XCircle className="w-4 h-4 mr-2" />
+          Avvisa
+        </Button>
+      </div>
+    </div>
+  );
+}
